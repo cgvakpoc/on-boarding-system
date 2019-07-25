@@ -9,6 +9,7 @@ use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Validator;
 use App\UserRole;
+use App\Department;
 
 class ApiController extends Controller
 {
