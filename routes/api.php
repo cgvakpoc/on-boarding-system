@@ -20,6 +20,7 @@ Route::group(['middleware' => 'auth.jwt'], function () {
     Route::get('logout', 'ApiController@logout');
     Route::get('user', 'ApiController@getAuthUser');
     Route::apiResource('departments','DepartmentController'); 
+    Route::apiResource('leads','LeadController');
 });
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {

@@ -21,17 +21,18 @@ class DepartmentController extends Controller
     }
 
     public function index(Request $request){
-        $sort_column = $request->input('sort_column');
-        $sort_order = $request->input('sort_order');
-        $searchtxt = $request->input('search_txt');
+        $sort = $request->input('sort');
+        $order = $request->input('order');
+        $search = $request->input('search');
+        $limit = $request->input('limit');
         
-        if($sort_column && $sort_order){
-            $sort_list = Department::orderBy($sort_column,$sort_order)->paginate(4); 
-            return response()->json($sort_list);   
+        if($sort && $order){
+            $list = Department::orderBy($sort,$order)->paginate($limit); 
+            return response()->json($list);   
         }
 
-        if($searchtxt){
-            $search_list = Department::where('department','LIKE','%'.$searchtxt.'%')->orWhere('description','LIKE','%'.$searchtxt.'%')->get();
+        if($search){
+            $search_list = Department::where('department','LIKE','%'.$search.'%')->orWhere('description','LIKE','%'.$search.'%')->get();
             if(count($search_list) > 0){
                 return response()->json($search_list);
             } else{
@@ -42,7 +43,7 @@ class DepartmentController extends Controller
             }    
         }
             
-        $departmentlist = Department::paginate(4);
+        $departmentlist = Department::paginate($limit);
         
         if(!empty($departmentlist) ){
             return response()->json($departmentlist);    
@@ -99,21 +100,33 @@ class DepartmentController extends Controller
                 'message'   =>  'Sorry, Department with id '.$id.' cannot be found'
             ], 400);
         }
-        
-        $dept_name = $request->input('department_name');
-        $dept_desc = $request->input('description');
+
         $userid = Auth::user()->id;
-        
-        if($dept_name == '' || $dept_desc == ''){
-            return response()->json([
-                'success'   =>  false,
-                'message'   => 'Department or Description is not provided'
-            ],400);
+
+        if($request->exists('department_name')) {
+            if($request->has('department_name')) {
+                $dept_name = $request->get('department_name');
+            } else {
+                return response()->json([
+                    'success'   =>  false,
+                    'message'   => 'Department Name cannot be empty'
+                ],400);
+            }
+        }
+        if($request->exists('description')){
+            if($request->has('description')){
+                $dept_desc = $request->get('description');   
+            } else {
+                return response()->json([
+                    'success'   =>  false,
+                    'message'   => 'Description cannot be empty'
+                ],400);
+            }
         }
 
         $updated =  $department->update([
-                        'department'    =>  $dept_name,
-                        'description'   =>  $dept_desc,
+                        'department'    =>  isset($dept_name) ? $dept_name : $department->department,
+                        'description'   =>  isset($dept_desc) ? $dept_desc : $department->description,
                         'updated_by'    =>  $userid
                     ]);
 
