@@ -15,7 +15,7 @@ class LeadController extends Controller
     public function __construct(Request $request){
     	
     	if(!isset($request->token)){
-    		return response()->json(['status'	=>	false]);
+    		return response()->json(['success'	=>	false]);
     	}
     	$this->user = JWTAuth::parseToken()->authenticate();
     }
@@ -26,44 +26,49 @@ class LeadController extends Controller
         $limit = $request->get('limit');
     	$search = $request->get('search');
 
-    	if($sort && $order){
-    		$list = Lead::orderBy($sort,$order)->paginate(4);
-    		return response()->json($list);
-    	}
+    	$leads_list = Lead::query();
 
-    	if($search){
-    		$query_list = Lead::where('name','LIKE','%'.$search.'%')->orWhere('designation','LIKE','%'.$search.'%')->orWhere('email_id','LIKE','%'.$search.'%')->get();
-    		if(count($query_list) > 0){
-    			return response()->json($query_list);
-    		} else{
-    			return response()->json([
-    				'success'	=>	false,
-    				'message'	=>	'No Details found for the query.'
-    			],400);
-    		}
-    	}
-    	$lead_list = Lead::paginate($limit);
+        $lead_records = $leads_list->get();
 
-    	if(!empty($lead_list) ){
-            return response()->json($lead_list);    
-        } else {
+        if($search){
+            $leads_list = $leads_list->where('name','LIKE','%'.$search.'%')
+                          ->where('designation','LIKE','%'.$search.'%')
+                          ->orWhere('email_id','LIKE','%'.$search.'%');
+
+            $search_list = $leads_list->get();
+
+            if(count($search_list) == 0){
+                return response()->json([
+                    'success'   =>  false,
+                    'message'   =>  'No search results found for the query '.$search
+                ],400);    
+            }
+        }
+        if($sort && $order){
+            $list = $leads_list->orderBy($sort,$order)->paginate($limit); 
+        } else if(count($lead_records) == 0){
             return response()->json([
                 'success'   =>  false,
-                'message'   =>  'Nothing Found'
-            ],400);
+                'message'   =>  'No Records Found'
+            ], 400);
+        } else{
+            $list = $leads_list->paginate($limit);
         }
+        
+        return response()->json($list);
     }
 
     public function show($id){
-    	$lead_info = Lead::find($id);
-    	if($lead_info){
-    		return response()->json($lead_info);
-    	} else{
-    		return response()->json([
-    			'success'	=>	false,
-    			'message'	=>	'Lead with id '.$id.' cannot be found'
-    		],400);
+    	
+        $lead_info = Lead::find($id);
+    	
+        if(!$lead_info){
+    	   return response()->json([
+                'success'   =>  false,
+                'message'   =>  'Lead with id '.$id.' cannot be found'
+            ],400);	
     	}
+        return response()->json($lead_info);
     }
 
     public function store(Request $request){
@@ -86,23 +91,23 @@ class LeadController extends Controller
 
     	$saved = $leads->save();
 
-    	if($saved){
-    		return response()->json([
-    			'success'	=>	true,
-    			'message'	=>	'Lead Information is added successfully'
-    		]);
-    	} else{
-    		return response()->json([
-    			'success'	=>	false,
-    			'message'	=>	'Failed to save the details'
-    		]);
-    	}
+    	if(!$saved){
+            return response()->json([
+                'success'   =>  false,
+                'message'   =>  'Failed to save the details'
+            ],400);	
+    	} 
+
+        return response()->json([
+                'success'   =>  true,
+                'message'   =>  'Lead Information is added successfully',
+                'data'      =>  $leads
+            ]);
     }
 
     public function update(Request $request,$id){
 
         $lead = Lead::find($id);
-        $userid = Auth::user()->id;
         
         if(!$lead){
             return response()->json([
@@ -111,44 +116,35 @@ class LeadController extends Controller
             ], 400);
         }
 
-        if($request->exists('name')) {
-            if($request->has('name')) {
-                $lead_name = $request->get('name');
-            } else {
-                return response()->json([
-                    'success'   =>  false,
-                    'message'   => 'Name cannot be empty'
-                ],400);
-            }
+        $validator = Validator::make($request->all(), [
+            'name'          =>  'required|max:255',
+            'designation'   =>  'required|max:255',
+        ]);
+
+        if($validator->fails()){
+            return response()->json($validator->errors());
         }
-        if($request->exists('designation')){
-            if($request->has('designation')){
-                $lead_designation = $request->get('designation');   
-            } else {
-                return response()->json([
-                    'success'   =>  false,
-                    'message'   => 'Designation cannot be empty'
-                ],400);
-            }
-        }
+
+        $lead_name = $request->get('name');
+        $lead_designation = $request->get('designation');
+        $userid = Auth::user()->id;
         
         $updated =  $lead->update([
-                        'name'          =>  isset($lead_name) ? $lead_name : $lead->name,
-                        'designation'   =>  isset($lead_designation) ? $lead_designation : $lead->designation,
+                        'name'          =>  $lead_name,
+                        'designation'   =>  $lead_designation,
                         'updated_by'    =>  $userid
                     ]);
 
-        if($updated){
-            return response()->json([
-                'success'   =>  true,
-                'message'   => 'Lead Information is updated successfully'
-            ],200);    
-        } else {
+        if(!$updated){
             return response()->json([
                 'success'   =>  false,
                 'message'   => 'Lead Information could not be updated'
-            ],400);
-        } 
+            ],400);    
+        }
+        return response()->json([
+            'success'   =>  true,
+            'message'   => 'Lead Information is updated successfully'
+        ],200); 
     }
 
     public function destroy($id){
@@ -163,16 +159,15 @@ class LeadController extends Controller
         
         $deleted = $lead->delete();
 
-        if($deleted){
-            return response()->json([
-                'success'   =>  true,
-                'message'   => 'Lead Information is deleted'
-            ],200);
-        } else{
+        if(!$deleted){
             return response()->json([
                 'success'   =>  false,
                 'message'   => 'Lead Information could not be deleted'
             ],400);
         }
+        return response()->json([
+            'success'   =>  true,
+            'message'   => 'Lead Information is deleted'
+        ],200);
     }
 }
