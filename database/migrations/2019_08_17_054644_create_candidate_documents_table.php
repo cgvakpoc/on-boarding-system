@@ -15,12 +15,16 @@ class CreateCandidateDocumentsTable extends Migration
     {
         Schema::create('candidate_documents',function(Blueprint $table){
             $table->increments('id');
-            $table->integer('candidate_id');
+            $table->integer('candidate_id')->unsigned();
             $table->string('document_title');
-            $table->string('document_path');
+            $table->text('document_path');
             $table->integer('created_by');
             $table->integer('updated_by');
             $table->timestamps();
+            $table->foreign('candidate_id')
+                  ->references('id')
+                  ->on('candidates')
+                  ->onDelete('cascade');
         });
     }
 

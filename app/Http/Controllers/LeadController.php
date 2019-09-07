@@ -20,6 +20,12 @@ class LeadController extends Controller
     	$this->user = JWTAuth::parseToken()->authenticate();
     }
 
+    protected $validationRules = [
+        'name'          =>  'required|max:255',
+        'designation'   =>  'required|max:255',
+        'email_id'      =>  'required|max:255|unique:leads,email_id'
+    ];
+
     public function index(Request $request){
     	$sort = $request->get('sort');
     	$order = $request->get('order');
@@ -58,75 +64,58 @@ class LeadController extends Controller
         return response()->json($list);
     }
 
-    public function show($id){
-    	
+    public function show($id)
+    {	
         $lead_info = Lead::find($id);
-    	
         if(!$lead_info){
-    	   return response()->json([
-                'success'   =>  false,
-                'message'   =>  'Lead with id '.$id.' cannot be found'
-            ],400);	
+           $msg = 'Lead with id '.$id.' cannot be found';
+    	   bad_request(false,$msg);
+           die;
     	}
-        return response()->json($lead_info);
+        success_200(true,'',$lead_info);
     }
 
-    public function store(Request $request){
-    	$validator = Validator::make($request->all(),[
-    		'name'			=>	'required|max:255',
-    		'designation'	=>	'required|max:255',
-    		'email_id'		=>	'required|max:255|unique:leads'
-    	]);
-
+    public function store(Request $request)
+    {
+        $user_id = Auth::user()->id;
+    	$validator = Validator::make($request->all(),$this->validationRules);
     	if($validator->fails()){
     		return response()->json($validator->errors());
     	}
 
     	$leads = new Lead();
-    	$leads->name = $request->input('name');
-    	$leads->designation = $request->input('designation');
-    	$leads->email_id = $request->input('email_id');
-    	$leads->created_by = Auth::user()->id;
-    	$leads->updated_by = Auth::user()->id;
+    	$leads->name = $request->name;
+    	$leads->designation = $request->designation;
+    	$leads->email_id = $request->email_id;
+    	$leads->created_by = $user_id;
+    	$leads->updated_by = $user_id;
 
     	$saved = $leads->save();
-
     	if(!$saved){
-            return response()->json([
-                'success'   =>  false,
-                'message'   =>  'Failed to save the details'
-            ],400);	
+            $msg = "Details cannot be saved";
+            bad_request(false,$msg);
+            die;
     	} 
-
-        return response()->json([
-                'success'   =>  true,
-                'message'   =>  'Lead Information is added successfully',
-                'data'      =>  $leads
-            ]);
+        $msg = 'Lead Information is saved successfully';
+        success_200(true,$leads,$msg);
     }
 
-    public function update(Request $request,$id){
-
-        $lead = Lead::find($id);
-        
+    public function update(Request $request,$id)
+    {
+        $lead = Lead::find($id);   
         if(!$lead){
-            return response()->json([
-                'success'   =>  false,
-                'message'   =>  'Sorry, Lead with id '.$id.' cannot be found'
-            ], 400);
+            $msg = 'Sorry, Lead with id '.$id.' cannot be found';
+            error_404(false,$msg);
+            die;
         }
-
-        $validator = Validator::make($request->all(), [
-            'name'          =>  'required|max:255',
-            'designation'   =>  'required|max:255',
-        ]);
+        $validator = Validator::make($request->all(),$this->validationRules);
 
         if($validator->fails()){
             return response()->json($validator->errors());
         }
 
-        $lead_name = $request->get('name');
-        $lead_designation = $request->get('designation');
+        $lead_name = $request->name;
+        $lead_designation = $request->designation;
         $userid = Auth::user()->id;
         
         $updated =  $lead->update([
@@ -136,38 +125,31 @@ class LeadController extends Controller
                     ]);
 
         if(!$updated){
-            return response()->json([
-                'success'   =>  false,
-                'message'   => 'Lead Information could not be updated'
-            ],400);    
+            $msg = 'Lead Information could not be updated';
+            bad_request(false,$msg);
+            die;    
         }
-        return response()->json([
-            'success'   =>  true,
-            'message'   => 'Lead Information is updated successfully'
-        ],200); 
+        $msg = 'Lead Information is updated successfully';
+        success_200(true,$msg,''); 
     }
 
     public function destroy($id){
         $lead = Lead::find($id);
         
         if(!$lead){
-            return response()->json([
-                'success'   =>  false,
-                'message'   => 'Sorry, Lead with id '.$id.' cannot be found'
-            ],400);
+            $msg = 'Sorry, Lead with id '.$id.' cannot be found';
+            error_404(false,$msg);
+            die;
         }
         
         $deleted = $lead->delete();
 
         if(!$deleted){
-            return response()->json([
-                'success'   =>  false,
-                'message'   => 'Lead Information could not be deleted'
-            ],400);
+            $msg = 'Lead Information could not be deleted';
+            bad_request(false,$msg);
+            die;
         }
-        return response()->json([
-            'success'   =>  true,
-            'message'   => 'Lead Information is deleted'
-        ],200);
+        $msg = 'Lead Information is deleted';
+        success_200(true,$msg,'');
     }
 }

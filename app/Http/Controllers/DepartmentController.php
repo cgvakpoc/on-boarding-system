@@ -36,12 +36,17 @@ class DepartmentController extends Controller
 
         $department_results = $departmentlist->get();
 
+        if(count($department_results) === 0){
+            $msg = 'No Records found';
+            error_404(false,$msg);
+            die;
+        }
         if($search){
             $departmentlist = $departmentlist->where('department','LIKE','%'.$search.'%')
                               ->orWhere('description','LIKE','%'.$search.'%');
             $search_results = $departmentlist->get();
 
-            if(count($search_results) == 0){
+            if(count($search_results) === 0){
                 $msg = 'No search results found for the query '.$search;
                 error_404(false,$msg);
                 die;   
@@ -50,15 +55,10 @@ class DepartmentController extends Controller
 
         if($sort && $order){
             $list = $departmentlist->orderBy($sort,$order)->paginate($limit); 
-        } else if(count($department_results) == 0){
-            $msg = 'No Records found';
-            error_404(false,$msg);
-            die;
         } else {
-            $list = $departmentlist->paginate($limit);
+            $list = $departmentlist->orderBy('id','ASC')->paginate($limit);
         }
-        
-        success_200(true,'',$list);   
+        success_200(true,$list);   
     }
 
     public function show($id){
@@ -69,7 +69,6 @@ class DepartmentController extends Controller
             error_404(false,$msg);
             die;
         }
-
         success_200(true,'',$department_list);
     }
 
@@ -87,10 +86,11 @@ class DepartmentController extends Controller
         $departments->save();
 
         $msg = 'Department is created successfully';
-        success_200(true,$msg,$departments);
+        success_200(true,$departments,$msg);
     }
 
-    public function update(Request $request,$id){
+    public function update(Request $request,$id)
+    {
         $userid = Auth::user()->id;
         $department = Department::find($id);
         
@@ -114,7 +114,7 @@ class DepartmentController extends Controller
                     ]);
 
         $msg = 'Department is updated successfully';
-        success_200(true,$msg,$updated);
+        success_200(true,$updated,$msg);
     }
 
     public function destroy($id){

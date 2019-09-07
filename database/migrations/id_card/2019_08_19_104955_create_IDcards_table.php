@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateTasksTable extends Migration
+class CreateIDcardsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,17 @@ class CreateTasksTable extends Migration
      */
     public function up()
     {
-        Schema::create('candidate_tasks',function(Blueprint $table){
+        Schema::create('id_card',function(Blueprint $table){
+            $table->increments('id');
+            $table->integer('emp_code');
             $table->integer('candidate_id')->unsigned();
-            $table->text('task_details');
-            $table->integer('lead_id');
+            $table->string('name');
+            $table->text('address');
+            $table->string('blood_group');
             $table->text('document_path');
-            $table->integer('task_status');
+            $table->integer('created_by');
+            $table->integer('updated_by');
+            $table->timestamps();
             $table->foreign('candidate_id')
                   ->references('id')
                   ->on('candidates')
@@ -33,6 +38,6 @@ class CreateTasksTable extends Migration
      */
     public function down()
     {
-        Schema::DropIfExists('candidate_tasks');
+        Schema::DropIfExists('id_card');
     }
 }

@@ -126,11 +126,11 @@ class FactSheetController extends Controller
     }
 
     public function add_certifications($request){
-        $insert_id = DB::table('fact_sheet')->latest()->first();
+        $id = $this->last_id();
         $certifications = $request->certifications;
         foreach($certifications as $key => $value){
             JoineeCertification::updateOrCreate([
-                'joinee_id'             =>  $insert_id->id,
+                'joinee_id'             =>  $id,
                 'certification_name'    =>  $value['certification_name'],
                 'completion_year'       =>  $value['completion_year']
             ]);
@@ -143,11 +143,11 @@ class FactSheetController extends Controller
     		echo "records deleted";
     	}
     	
-        $insert_id = DB::table('fact_sheet')->latest()->first();
+        $id = $this->last_id();
         $ratings = $request->ratings;
         foreach ($ratings as $key => $value) {
             JoineeSoftwareRating::updateOrCreate([
-                'joinee_id'         =>  $insert_id->id,
+                'joinee_id'         =>  $id,
                 'software_subject'  =>  $value['subject'],
                 'software_rating'   =>  $value['rating']
             ]);
@@ -155,13 +155,13 @@ class FactSheetController extends Controller
     }
 
     public function add_experience($request){
-        $insert_id = DB::table('fact_sheet')->latest()->first();
+        $id = $this->last_id();
         $experience = $request->experience;
         foreach ($experience as $key => $value) {
             $date_from = convert_date($value['work_from']);
             $date_to = convert_date($value['work_to']);
             JoineeExperience::updateOrCreate([
-                'joinee_id'         =>  $insert_id->id,
+                'joinee_id'         =>  $id,
                 'from'              =>  $date_from,
                 'to'                =>  $date_to,
                 'total_exp'         =>  $value['total_exp'],
@@ -174,9 +174,9 @@ class FactSheetController extends Controller
     }
 
     public function add_remuneration($request){
-        $insert_id = DB::table('fact_sheet')->latest()->first();
+        $id = $this->last_id();
         JoineeRemuneration::updateOrCreate([
-            'joinee_id'         =>  $insert_id->id,
+            'joinee_id'         =>  $id,
             'take_home_sal'     =>  $request->salary,
             'deductions'        =>  $request->deductions,
             'monthly_ctc'       =>  $request->monthly_ctc,
@@ -187,9 +187,9 @@ class FactSheetController extends Controller
 
     public function add_job_details($request){
         $job_details = new JoineeJobDetails();
-        $insert_id = DB::table('fact_sheet')->latest()->first();
+        $id = $this->last_id();
         JoineeJobDetails::updateOrCreate([
-        	'joinee_id' 		=> $insert_id->id,
+        	'joinee_id' 		=> $id,
         	'responsibilities'	=> $request->responsibilities,
         	'achievements'		=> $request->achievements,
         	'ambition'			=> $request->ambition,
@@ -199,9 +199,9 @@ class FactSheetController extends Controller
     }
 
     public function add_visadetails($request){
-        $insert_id = DB::table('fact_sheet')->latest()->first();
+        $id = $this->last_id();
         JoineeVisa::updateOrCreate([
-        	'joinee_id'		=> $insert_id->id,
+        	'joinee_id'		=> $id,
         	'visa_applied'	=> $request->visa_applied,
         	'reject_reason' => $request->reason
         ]);
@@ -302,9 +302,9 @@ class FactSheetController extends Controller
         $responseData['rating'] = $rating;
         $responseData['experience'] = $experience;
         $responseData['renumeration'] = $renum;
-        $responseData['visa'] = $visa;
         $responseData['others'] = $job;
-
+        $responseData['visa'] = $visa;
+        
         $message = 'Data saved successfully';
         success_200(true,$message,$responseData);
     }
@@ -313,7 +313,7 @@ class FactSheetController extends Controller
     {	
         $fact_sheet = FactSheet::find($id);
 
-    	if($fact_sheet == ''){
+    	if($fact_sheet === 0){
             $err_msg = 'Data not found';
     		error_404(false,$err_msg); 
             die;   	
@@ -337,9 +337,9 @@ class FactSheetController extends Controller
         $responseData['rating'] = $rating;
         $responseData['experience'] = $experience;
         $responseData['renumeration'] = $renum;
-        $responseData['visa'] = $visa;
         $responseData['others'] = $job;
-
+        $responseData['visa'] = $visa;
+       
     	return response()->json([
     		'success'	=>	true,
     		'data'		=>	$responseData
