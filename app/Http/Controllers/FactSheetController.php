@@ -47,13 +47,13 @@ class FactSheetController extends Controller
         'candidate_address'     =>  'required',
         'candidate_mobile'      =>  'required|numeric|unique:fact_sheet,mobile',
         'candidate_email'       =>  'required|unique:fact_sheet,email',
-        // 'languages'             =>  'required',
-        // 'candidate_education'   =>  'required',
-        // 'maths_10_marks'        =>  'required',
-        // 'maths_12_marks'        =>  'required',
-        // 'software_rating'       =>  'required',
-        // 'ambition'              =>  'required',
-        // 'passport_available'    =>  'required'
+        'languages'             =>  'required',
+        'candidate_education'   =>  'required',
+        'maths_10_marks'        =>  'required',
+        'maths_12_marks'        =>  'required',
+        'software_rating'       =>  'required',
+        'ambition'              =>  'required',
+        'passport_available'    =>  'required'
     ];
 
     public function last_id(){
@@ -313,7 +313,7 @@ class FactSheetController extends Controller
     {	
         $fact_sheet = FactSheet::find($id);
 
-    	if($fact_sheet === 0){
+    	if(count($fact_sheet) === 0){
             $err_msg = 'Data not found';
     		error_404(false,$err_msg); 
             die;   	
@@ -340,10 +340,7 @@ class FactSheetController extends Controller
         $responseData['others'] = $job;
         $responseData['visa'] = $visa;
        
-    	return response()->json([
-    		'success'	=>	true,
-    		'data'		=>	$responseData
-    	]);
+    	success_200(true,$responseData);
     }
 
     public function update($id,Request $request)
