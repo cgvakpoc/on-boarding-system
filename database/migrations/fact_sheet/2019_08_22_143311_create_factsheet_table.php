@@ -18,7 +18,7 @@ class CreateFactsheetTable extends Migration
             $table->string('name');
             $table->integer('pos_applied');
             $table->string('email')->unique();
-            $table->string('phonenumber')->unique();
+            $table->string('phonenumber')->unique()->nullable();
             $table->string('mobile')->unique();
             $table->string('age');
             $table->date('dob');

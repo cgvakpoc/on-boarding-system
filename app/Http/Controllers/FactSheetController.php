@@ -23,7 +23,7 @@ class FactSheetController extends Controller
 {
 	protected $user;
  	
- 	private $insert_id;
+ 	protected $insert_id;
 
     public function __construct(Request $request)
     {
@@ -48,12 +48,12 @@ class FactSheetController extends Controller
         'candidate_mobile'      =>  'required|numeric|unique:fact_sheet,mobile',
         'candidate_email'       =>  'required|unique:fact_sheet,email',
         'languages'             =>  'required',
-        'candidate_education'   =>  'required',
+        'education'             =>  'required',
         'maths_10_marks'        =>  'required',
         'maths_12_marks'        =>  'required',
-        'software_rating'       =>  'required',
+        'ratings'               =>  'required',
         'ambition'              =>  'required',
-        'passport_available'    =>  'required'
+        'passport'              =>  'required'
     ];
 
     public function last_id(){
@@ -117,7 +117,7 @@ class FactSheetController extends Controller
         $joinee_sibling = $request->siblings;
         foreach($joinee_sibling as $key => $value) {
             JoineeSibling::updateOrCreate([
-               'joinee_id'      => $insert_id->id,
+               'joinee_id'      => $id,
                'sibling_name'   => $value['sibling_name'],
                'course'         => $value['course'],
                'institution'    => $value['institution']
