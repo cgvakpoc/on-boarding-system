@@ -57,5 +57,9 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'auth.jwt' => \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
+		//Zizaco entrust
+		'role' => \Zizaco\Entrust\Middleware\EntrustRole::class,
+		'permission' => \Zizaco\Entrust\Middleware\EntrustPermission::class,
+		'ability' => \Zizaco\Entrust\Middleware\EntrustAbility::class,
     ];
 }
