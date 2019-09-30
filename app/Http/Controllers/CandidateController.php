@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use DB;
 use Illuminate\Http\Request;
 use JWTAuth;
 use Validator;
 use Auth;
 use App\Candidate\Candidate;
 use App\Candidate\CandidateDocument;
+use App\Candidate\CandidateDoc;
 
 class CandidateController extends Controller
 {
@@ -47,7 +49,7 @@ class CandidateController extends Controller
 	protected $customMessage = [
 		'document_upload.*.required'	=>	'Please upload a document',
 		'document_upload.*.mimes'		=>	'Only pdf,docx and doc files are allowed'
-	];
+	];	
 
 	public function listCandidates(Request $request)
 	{
@@ -102,7 +104,6 @@ class CandidateController extends Controller
 		$dob = convert_date($request->dob);
 
 		$new_candidate = new Candidate();
-
 		$new_candidate->name 			= $request->name;
 		$new_candidate->department_id 	= $request->department_id;
 		$new_candidate->designation_id = $request->designation_id;
@@ -137,7 +138,6 @@ class CandidateController extends Controller
 			error_404(false,$msg);
 			die;
         }
-
         $this->validationRules['email_id'] = 'required|string|email|unique:candidates,email,'.$id.',id';
 		$validator = Validator::make($request->all(),$this->validationRules);
 		
@@ -194,8 +194,57 @@ class CandidateController extends Controller
         success_200(true,'',$msg);
 	}
 
-	public function index(Request $request)
-	{
+
+	//Upload Candidate Docs
+
+	public function add_document($request){
+		$id = $request->id;
+		$doc_upload = $request->file('document_upload');
+		$doc_path = public_path('/uploads');
+		$doc_upload = store_files($doc_path,$doc_upload);
+		$doc_save = $doc_upload;
+		foreach($doc_save as $key){
+			CandidateDoc::Create([
+				'candidate_id'	=> $id,
+				'document_path'	=>	$key
+			]);
+		}
+	}
+
+	public function add_title($request){
+		$id = $request->id;
+		CandidateDocument::Create([
+			'candidate_id'		=> $id,
+			'document_title'	=>	$request->document_title
+		]);
+	}
+
+	public function update_title($request){
+		$id = $request->id;
+		CandidateDocument::where('candidate_id',$id)->delete();
+		CandidateDocument::Create([
+			'candidate_id'		=>	$id,
+			'document_title'	=>	$request->document_title
+		]);
+	}
+
+	public function update_document($request){
+		$id = $request->id;
+		CandidateDoc::where('candidate_id',$id)->delete();
+		$doc_upload = $request->file('document_upload');
+		$doc_path = public_path('/uploads');
+		$doc_upload = store_files($doc_path,$doc_upload);
+		$doc_save = $doc_upload;
+		foreach($doc_save as $key){
+			CandidateDoc::Create([
+				'candidate_id'	=> $id,
+				'document_path'	=>	$key
+			]);
+		}
+	}
+
+	public function index(Request $request,$msg='')
+	{	
 		$id = $request->id;
 		$doc_list = Candidate::find($id);
 		if(count($doc_list) === 0){
@@ -203,12 +252,23 @@ class CandidateController extends Controller
 			error_404(false,$error_msg);
 			die;
 		}
-		$list = $doc_list->can_docs()->get();
-		$list[0]->document_path = unserialize($list[0]->document_path);
-		success_200(true,$list);
+		$documents = DB::table('candidate_documents as c1')
+		               ->select('c1.document_title')
+		               ->join('candidates as c2','c1.candidate_id','c2.id')
+		               ->where('c1.candidate_id',$id)
+		               ->get();
+		$document_list = DB::table('candidate_document_details as c1')
+		              ->select('c1.document_path')
+		              ->join('candidates as c2','c2.id','c1.candidate_id')
+		              ->where('c1.candidate_id',$id)
+		              ->get();
+		$list = array();
+		$list['title'] = $documents;
+		$list['document_paths'] = $document_list;
+		success_200(true,$list,$msg);
 	}
 
-	public function add(Request $request)
+	public function add(Request $request)// Add Candidate Documents
 	{
 		$candidate_docs = CandidateDocument::where('candidate_id',$request->id)->first();
 		if(count($candidate_docs) > 0){
@@ -217,34 +277,29 @@ class CandidateController extends Controller
 			die;
 		}
 		$id = $request->id;
-		$user_id = Auth::user()->id;
 		$validator = Validator::make($request->all(),$this->documentRules,$this->customMessage);
 		if($validator->fails()){
 			return response()->json($validator->errors());
 		}
-
-		$doc_upload = $request->file('document_upload');
-		$doc_path = public_path('/uploads');
-		$doc_upload = store_files($doc_path,$doc_upload);
-		$doc_save = serialize($doc_upload);
-
-		$docs = new CandidateDocument();
-		$docs->candidate_id = $id;
-		$docs->document_title = $request->document_title;
-		$docs->document_path = $doc_save;
-		$docs->created_by = $user_id;
-		$docs->updated_by = $user_id;	
-		$save = $docs->save();
-
-		$docs['document_path'] = unserialize($docs['document_path']);
+		
+		DB::beginTransaction();
+		try{
+			$this->add_title($request);
+			$this->add_document($request);
+		}
+		catch(\Exception $e){
+			DB::rollback();
+            error_404(false,$e);
+            die;
+		}
+		DB::commit();
 		$msg = 'Documents uploaded successfully';
-		success_200(true,$docs,$msg);
+		$docs = $this->index($request,$msg);
 	}
 
-	public function update(Request $request)
+	public function update(Request $request)//Update Candidate Documents
 	{
 		$id = $request->id;
-		$user_id = Auth::user()->id;
 		$candidate_docs = CandidateDocument::where('candidate_id',$id)->first();
 		if(count($candidate_docs) === 0){
 			$msg = 'Sorry, Documents for id '.$id.' cannot be found';
@@ -256,23 +311,17 @@ class CandidateController extends Controller
 			return response()->json($validator->errors());
 		}
 
-		$doc_upload = $request->file('document_upload');
-		$doc_path = public_path('/uploads'); 
-		$doc_upload = store_files($doc_path,$doc_upload);
-		$doc_update = serialize($doc_upload);
-
-		$update_docs = $candidate_docs->update([
-			'document_title'	=>	$request->document_title,
-			'document_path'		=>	$doc_update,
-			'updated_by'		=>	$user_id
-		]);
-		if(!$update_docs){
-			$msg = "Failed to update the documents";
-			bad_request(false,$msg);
-			die;
+		DB::beginTransaction();
+		try{
+			$this->update_title($request);
+			$this->update_document($request);
 		}
-		$candidate_docs['document_path'] = unserialize($candidate_docs['document_path']);
+		catch(\Exception $e){
+			DB::rollback();
+			error_404(false,$e);
+		}
+		DB::commit();
 		$msg = 'Documents has been updated successfully';
-		success_200(true,$candidate_docs,$msg);
+		$this->index($request,$msg);
 	}
 }

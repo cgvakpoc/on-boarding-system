@@ -15,7 +15,7 @@ class CreateJoineeVisaDetailsTable extends Migration
     {
         Schema::create('visa_details',function(Blueprint $table){
             $table->integer('joinee_id')->unsigned();
-            $table->text('visa_applied')->nullable();
+            $table->integer('visa_applied')->nullable();
             $table->text('reject_reason')->nullable();
             $table->foreign('joinee_id')
                   ->references('id')

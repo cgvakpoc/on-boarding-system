@@ -10,10 +10,14 @@ class FactSheet extends Model
 
     protected $primaryKey = 'id';
 
-    protected $fillable = ['name','pos_applied','email','phonenumber','mobile','age','dob','address','town','state','father_name','father_occupation','marital_status','spouse_name','spouse_occupation','religion','languages'];
+    protected $fillable = ['name','pos_applied','email','phonenumber','mobile','age','dob','address','town','state','father_name','father_occupation','marital_status','spouse_name','spouse_occupation','religion','edit_state'];
 
     public function siblings(){
     	return $this->hasMany('App\FactSheet\JoineeSibling','joinee_id');
+    }
+
+    public function languages(){
+        return $this->hasMany('App\FactSheet\Language','joinee_id');
     }
 
     public function education(){
@@ -30,5 +34,9 @@ class FactSheet extends Model
 
     public function renumeration(){
         return $this->hasMany('App\FactSheet\JoineeRemuneration','joinee_id');
+    }
+
+    public function activity(){
+        return $this->hasMany('App\FactSheet\Activity','joinee_id');
     }
 }

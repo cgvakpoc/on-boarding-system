@@ -15,11 +15,11 @@ class CreateJoineeRemunerationTable extends Migration
     {
         Schema::create('remuneration',function(Blueprint $table){
         	$table->integer('joinee_id')->unsigned()->index();
-        	$table->decimal('take_home_sal',12,2);
-        	$table->text('deductions');
-        	$table->decimal('monthly_ctc',12,2);
-        	$table->decimal('yearly_ctc',12,2);
-        	$table->text('others')->nullable();
+        	$table->decimal('take_home_sal',12,2)->nullable();
+        	$table->text('deductions')->nullable();
+        	$table->decimal('monthly_ctc',12,2)->nullable();
+        	$table->decimal('yearly_ctc',12,2)->nullable();
+        	$table->text('others')->nullable()->nullable();
             $table->foreign('joinee_id')
                   ->references('id')
                   ->on('fact_sheet')

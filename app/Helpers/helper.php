@@ -9,18 +9,18 @@ if (!function_exists('convert_date')) {
 if(!function_exists('store_files')) {
   function store_files($path,$file){
     $file_name = '';
+    $i = 0;
     if(!is_array($file)){
       $name = time().$file->getClientOriginalName();
       $directory = $file->move($path,$name);
-      $file_name = '/public/uploads/'.$name;
+      $file_name[$i] = '/public/uploads/'.$name;
       return $file_name;
     }  
-
-    $i = 0;
+    
     foreach($file as $files){
         $name = time().$files->getClientOriginalName();
         $directory = $files->move($path,$name);
-        $file_name['file'.$i] = '/public/uploads/'.$name;
+        $file_name[$i] = '/public/uploads/'.$name;
         $i++;
     }
     return $file_name;

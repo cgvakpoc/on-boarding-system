@@ -50,7 +50,7 @@ class TaskController extends Controller
     			 ->join('task_status as t4','t1.task_status','t4.id')
     			 ->where('t2.id',$id)
     			 ->get();
-    	$tasks[0]->document_path = unserialize($tasks[0]->document_path);
+    	//$tasks[0]->document_path = unserialize($tasks[0]->document_path);
     	success_200(true,$tasks);
     }
 
@@ -74,24 +74,25 @@ class TaskController extends Controller
 		$task_path = public_path('/uploads');
 		  
 		$task_upload = store_files($task_path,$task_upload);
-		$task_save = serialize($task_upload);
+		$task_doc = $task_upload;
 
-		$task = new Task();
-
-		$task->candidate_id = $id;
-		$task->task_details = $request->task_details;
-		$task->lead_id = $request->lead_id;
-		$task->document_path = $task_save;
-		$task->task_status = $request->task_status;
-		
-		$save = $task->save();
-
-		if(!$save){
-			$msg = 'Task details cannot be uploaded';
+		//$task = new Task();
+		foreach($task_doc as $doc){
+			$task_add[] = array(
+				'candidate_id'	=>	$id,
+				'task_details'	=>	$request->task_details,
+				'lead_id'		=>	$request->lead_id,
+				'document_path'	=>	$doc,
+				'task_status'	=>	$request->task_status
+			);
+		}
+		$save = Task::insert($task_add);
+		if($save === 0){
+			$msg = 'Task details cannot be added';
 			bad_request(false,$msg);
 			die;
 		}
-		$task['document_path'] = unserialize($task['document_path']);
+		$task = Task::where('candidate_id',$id)->get();
 		$msg = 'Task details added successfully';
 		success_200(true,$task,$msg);
     }

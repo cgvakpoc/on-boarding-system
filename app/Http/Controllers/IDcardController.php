@@ -65,7 +65,7 @@ class IDcardController extends Controller
      	$idcard->name = $request->candidate_name;
      	$idcard->address = $request->candidate_addr;
      	$idcard->blood_group = $request->blood_group;
-     	$idcard->document_path = $doc_upload;
+     	$idcard->document_path = $doc_upload[0];
      	$idcard->created_by = $userid;
      	$idcard->updated_by = $userid;
      	$idcard->save();
@@ -102,7 +102,7 @@ class IDcardController extends Controller
 			'name'			=>	$request->candidate_name,
 			'address'		=>	$request->candidate_addr,
 			'blood_group'	=>	$request->blood_group,
-			'document_path'	=>	$doc_upload,
+			'document_path'	=>	$doc_upload[0],
 			'updated_by'	=>	Auth::user()->id
 		]);
 

@@ -15,13 +15,13 @@ class CreateJoineeExperienceTable extends Migration
     {
         Schema::create('joinee_experience',function(Blueprint $table){
             $table->integer('joinee_id')->unsigned()->index();
-            $table->date('from');
-            $table->date('to');
-            $table->string('total_exp');
-            $table->string('designation');
-            $table->string('organisation');
-            $table->string('location');
-            $table->string('reason_to_leave');
+            $table->date('from')->nullable();
+            $table->date('to')->nullable();
+            $table->string('total_exp')->nullable();
+            $table->string('designation')->nullable();
+            $table->string('organisation')->nullable();
+            $table->string('location')->nullable();
+            $table->string('reason_to_leave')->nullable();
             $table->foreign('joinee_id')
                   ->references('id')
                   ->on('fact_sheet')

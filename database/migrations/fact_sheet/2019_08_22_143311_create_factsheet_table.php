@@ -31,7 +31,7 @@ class CreateFactsheetTable extends Migration
             $table->string('spouse_name')->nullable();
             $table->string('spouse_occupation')->nullable();
             $table->string('religion');
-            $table->text('languages');
+            $table->integer('edit_state');
             $table->timestamps();
         });
     }
