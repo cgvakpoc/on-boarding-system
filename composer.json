@@ -13,7 +13,8 @@
     "require-dev": {
         "fzaninotto/faker": "~1.4",
         "mockery/mockery": "0.9.*",
-        "phpunit/phpunit": "~5.7"
+        "phpunit/phpunit": "~5.7",
+        "zizaco/entrust": "dev-master"
     },
     "autoload": {
 		"files":[
@@ -24,7 +25,10 @@
         ],
         "psr-4": {
             "App\\": "app/"
-        }
+        },
+		"files": [
+			"app/Helpers/ResponseHelper.php"
+		]
     },
     "autoload-dev": {
         "psr-4": {
