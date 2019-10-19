@@ -15,9 +15,9 @@ if (!function_exists('http_201')) {
 }
 
 if (!function_exists('error_401')) {
-	function error_401($msg)
+	function error_401($msg, $data = [])
 	{
-		return response()->json(['success' => false, 'message' => $msg, 'data' => ''], 401);
+		return response()->json(['success' => false, 'message' => $msg, 'data' => $data], 401);
 	}
 }
 

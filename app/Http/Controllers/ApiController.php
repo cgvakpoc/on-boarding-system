@@ -81,15 +81,24 @@ class ApiController extends Controller
 
 	public function login(Request $request)
 	{
+		$validator = Validator::make($request->all(), [
+			'email' => 'required',
+			'password' => 'required',
+		]);
+
+		if($validator->fails()){
+			$response = error_401('Validation Error', $validator->errors());
+			return $response;
+		}
+
 		$input = $request->only('email', 'password');
 		$jwt_token = null;
 
 		if (!$jwt_token = JWTAuth::attempt($input)) {
 			$response = error_401('Invalid Email or Password');
-
+			return $response;
 		}
-
-		$response = response()->json(['success' => true, 'token' => $jwt_token,]);
+		$response = response()->json(['success' => true, 'token' => $jwt_token]);
 		return $response;
 	}
 
