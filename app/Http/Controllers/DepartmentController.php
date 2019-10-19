@@ -7,6 +7,7 @@ use JWTAuth;
 use Validator;
 use Auth;
 use App\Department;
+//use DB;
 
 class DepartmentController extends Controller
 {
@@ -15,143 +16,118 @@ class DepartmentController extends Controller
     public function __construct(Request $request)
     {
         if(!isset($request->token)){
-            return response()->json(['status' => false]);
+            return response()->json(['success' => false]);
         }
         $this->user = JWTAuth::parseToken()->authenticate();
     }
 
+    protected $validationRules = [
+        'department' => 'required|max:255',
+        'description' => 'required|max:255',
+    ];
+
     public function index(Request $request){
-        $sort_column = $request->input('sort_column');
-        $sort_order = $request->input('sort_order');
-        $searchtxt = $request->input('search_txt');
+        $sort = $request->sort;
+        $order = $request->order;
+        $search = $request->search;
+        $limit = $request->limit;
         
-        if($sort_column && $sort_order){
-            $sort_list = Department::orderBy($sort_column,$sort_order)->paginate(4); 
-            return response()->json($sort_list);   
+        $departmentlist = Department::query();
+
+        $department_results = $departmentlist->get();
+
+        if(count($department_results) === 0){
+            $msg = 'No Records found';
+            error_404(false,$msg);
+            die;
+        }
+        if($search){
+            $departmentlist = $departmentlist->where('department','LIKE','%'.$search.'%')
+                              ->orWhere('description','LIKE','%'.$search.'%');
+            $search_results = $departmentlist->get();
+
+            if(count($search_results) === 0){
+                $msg = 'No search results found for the query '.$search;
+                error_404(false,$msg);
+                die;   
+            }
         }
 
-        if($searchtxt){
-            $search_list = Department::where('department','LIKE','%'.$searchtxt.'%')->orWhere('description','LIKE','%'.$searchtxt.'%')->get();
-            if(count($search_list) > 0){
-                return response()->json($search_list);
-            } else{
-                return response()->json([
-                    'success'   =>  false,
-                    'message'   =>  'No Details found for the query.'
-                ],500);
-            }    
-        }
-            
-        $departmentlist = Department::paginate(4);
-        
-        if(!empty($departmentlist) ){
-            return response()->json($departmentlist);    
+        if($sort && $order){
+            $list = $departmentlist->orderBy($sort,$order)->paginate($limit); 
         } else {
-            return response()->json([
-                'success'   =>  false,
-                'message'   =>  'Nothing Found'
-            ],400);
+            $list = $departmentlist->orderBy('id','ASC')->paginate($limit);
         }
+        success_200(true,$list);   
     }
 
     public function show($id){
         $department_list = Department::find($id);
         
         if(!$department_list){
-            return response()->json([
-                'success'   =>  false,
-                'message'   =>  'Department with id '.$id.' cannot be found'
-            ]);
+            $msg = 'Department with id '.$id.' cannot be found';
+            error_404(false,$msg);
+            die;
         }
-
-        return response()->json($department_list);
+        success_200(true,'',$department_list);
     }
 
     public function store(Request $request){
-        $validator = Validator::make($request->all(), [
-            'department' => 'required|max:255',
-            'description' => 'required|max:255',
-        ]);
-
+        $validator = Validator::make($request->all(),$this->validationRules);
         if ($validator->fails()) {
             return response()->json($validator->errors());
         }
 
         $departments = new Department();
-        $departments->department = $request->input('department');
-        $departments->description = $request->input('description');
+        $departments->department = $request->department;
+        $departments->description = $request->description;
         $departments->created_by = Auth::user()->id;
         $departments->updated_by = Auth::user()->id;
         $departments->save();
-        return response()->json([
-            'success'   =>  true,
-            'message'   => 'Department is created successfully'
-        ],200);
+
+        $msg = 'Department is created successfully';
+        success_200(true,$departments,$msg);
     }
 
-    public function update(Request $request,$id){
-
+    public function update(Request $request,$id)
+    {
+        $userid = Auth::user()->id;
         $department = Department::find($id);
         
         if(!$department){
-            return response()->json([
-                'success'   =>  false,
-                'message'   =>  'Sorry, Department with id '.$id.' cannot be found'
-            ], 400);
+            $msg = 'Sorry, Department with id '.$id.' cannot be found';
+            error_404(false,$msg);
+            die;
         }
         
-        $dept_name = $request->input('department_name');
-        $dept_desc = $request->input('description');
-        $userid = Auth::user()->id;
-        
-        if($dept_name == '' || $dept_desc == ''){
-            return response()->json([
-                'success'   =>  false,
-                'message'   => 'Department or Description is not provided'
-            ],400);
+        $validator = Validator::make($request->all(),$this->validationRules);
+        if($validator->fails()){
+            return response()->json($validator->errors());
         }
 
+        $dept_name = $request->department_name;
+        $dept_desc = $request->description;
         $updated =  $department->update([
                         'department'    =>  $dept_name,
                         'description'   =>  $dept_desc,
                         'updated_by'    =>  $userid
                     ]);
 
-        if($updated){
-            return response()->json([
-                'success'   =>  true,
-                'message'   => 'Department is updated successfully'
-            ],200);    
-        } else {
-            return response()->json([
-                'success'   =>  false,
-                'message'   => 'Department could not be updated'
-            ],400);
-        } 
+        $msg = 'Department is updated successfully';
+        success_200(true,$updated,$msg);
     }
 
     public function destroy($id){
         $department = Department::find($id);
         
         if(!$department){
-            return response()->json([
-                'success'   =>  false,
-                'message'   => 'Sorry, Department with id '.$id.' cannot be found'
-            ],400);
+            $msg = 'Sorry, Department with id '.$id.' cannot be found';
+            error_404(false,$msg);
+            die;
         }
         
-        $deleted = $department->delete();
-
-        if($deleted){
-            return response()->json([
-                'success'   =>  true,
-                'message'   => 'Department is deleted'
-            ],200);
-        } else{
-            return response()->json([
-                'success'   =>  false,
-                'message'   => 'Department could not be deleted'
-            ],400);
-        }
+        $deleted = $department->delete(); 
+        $msg = 'Department is deleted';
+        success_200(true,$msg,'');
     }
 }

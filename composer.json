@@ -17,6 +17,9 @@
         "zizaco/entrust": "dev-master"
     },
     "autoload": {
+		"files":[
+			"app/Helpers/Helper.php"
+		],
         "classmap": [
             "database"
         ],
