@@ -23,7 +23,7 @@ use App\FactSheet\Activity;
 class FactSheetController extends Controller
 {
 	protected $user;
- 	
+
  	protected $insert_id;
 
     public function __construct(Request $request)
@@ -68,7 +68,7 @@ class FactSheetController extends Controller
         if($request->form_save === 'submit'){
         	$form_state = 0;
         }
-        
+
         $dateofbirth = convert_date($request->candidate_dob);
         FactSheet::Create([
         	'name'				=>	$request->candidate_name,
@@ -280,7 +280,7 @@ class FactSheetController extends Controller
     	if($request->form_save === 'submit'){
     		$form_state = 0;
     	}
-    	
+
     	$update_fact = FactSheet::where('id',$id)->update([
     		'name'				=>	$request->candidate_name,
         	'pos_applied'		=>	$request->position_applied,
@@ -365,7 +365,7 @@ class FactSheetController extends Controller
 	                'certification_name'    =>  $value['certification_name'],
 	                'completion_year'       =>  $value['completion_year']
 	    		]);
-	    	}	
+	    	}
     	}
     }
 
@@ -424,7 +424,7 @@ class FactSheetController extends Controller
             'monthly_ctc'       =>  $request->monthly_ctc,
             'yearly_ctc'        =>  $request->yearly_ctc,
             'others'            =>  $request->others
-        ]);    
+        ]);
     }
 
     public function update_job_details($request){
@@ -483,14 +483,14 @@ class FactSheetController extends Controller
             $this->add_job_details($request);
             $this->add_activity($request);
             $this->add_visadetails($request);
+			DB::commit();
         }
-        DB::commit();
         catch(\Exception $e){
             DB::rollback();
             error_404(false,$e);
             die;
         }
-        
+
         $last_id = $this->last_id();
         // Get records of last inserted candidate
         // Data retrieved from multi-tables(using foreign keys)
@@ -517,20 +517,20 @@ class FactSheetController extends Controller
         $responseData['renumeration'] = $renum;
         $responseData['others'] = $job;
         $responseData['activities'] = $activities;
-        $responseData['visa'] = $visa; 
+        $responseData['visa'] = $visa;
         $message = 'Data saved successfully';
         success_200(true,$message,$responseData);
     }
 
     public function show($id)
-    {	
+    {
         $fact_sheet = FactSheet::find($id);
     	if(count($fact_sheet) === 0){
             $err_msg = 'Data not found for the id '.$id;
-    		error_404(false,$err_msg); 
-            die;   	
+    		error_404(false,$err_msg);
+            die;
         }
-        
+
         $rating = $this->show_rating($id);
         $details = $this->show_details($id);
         $visa = $this->show_visa($id);
@@ -558,7 +558,7 @@ class FactSheetController extends Controller
     }
 
     public function update(Request $request)
-    {  	
+    {
     	$id = $request->id;
         $candidate_id = FactSheet::find($id);
         if(count($candidate_id) === 0){
@@ -569,7 +569,7 @@ class FactSheetController extends Controller
         $this->validationRules['candidate_email'] = 'required|email|unique:fact_sheet,email,'.$id.',id';
         $this->validationRules['phone'] = 'numeric|digits_between:6,10|unique:fact_sheet,phonenumber,'.$id.',id';
         $this->validationRules['candidate_mobile'] = 'required|numeric|digits_between:10,12|unique:fact_sheet,mobile,'.$id.',id';
-      
+
     	$validator = Validator::make($request->all(),$this->validationRules);
         if($validator->fails()){
             return response()->json($validator->errors(),400);
