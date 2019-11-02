@@ -1,8 +1,9 @@
 <?php
- 
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Validator;
 use Auth;
@@ -12,7 +13,7 @@ use App\Department;
 class DepartmentController extends Controller
 {
     protected $user;
- 
+
     public function __construct(Request $request)
     {
         if(!isset($request->token)){
@@ -31,7 +32,7 @@ class DepartmentController extends Controller
         $order = $request->order;
         $search = $request->search;
         $limit = $request->limit;
-        
+
         $departmentlist = Department::query();
 
         $department_results = $departmentlist->get();
@@ -49,27 +50,27 @@ class DepartmentController extends Controller
             if(count($search_results) === 0){
                 $msg = 'No search results found for the query '.$search;
                 error_404(false,$msg);
-                die;   
+                die;
             }
         }
 
         if($sort && $order){
-            $list = $departmentlist->orderBy($sort,$order)->paginate($limit); 
+            $list = $departmentlist->orderBy($sort,$order)->paginate($limit);
         } else {
             $list = $departmentlist->orderBy('id','ASC')->paginate($limit);
         }
-        success_200(true,$list);   
+		return http_201('success', $list);
     }
 
     public function show($id){
         $department_list = Department::find($id);
-        
+
         if(!$department_list){
             $msg = 'Department with id '.$id.' cannot be found';
             error_404(false,$msg);
             die;
         }
-        success_200(true,'',$department_list);
+		return http_201('success', $department_list);
     }
 
     public function store(Request $request){
@@ -78,34 +79,41 @@ class DepartmentController extends Controller
             return response()->json($validator->errors());
         }
 
-        $departments = new Department();
-        $departments->department = $request->department;
-        $departments->description = $request->description;
-        $departments->created_by = Auth::user()->id;
-        $departments->updated_by = Auth::user()->id;
-        $departments->save();
-
-        $msg = 'Department is created successfully';
-        success_200(true,$departments,$msg);
+		DB::beginTransaction();
+		try {
+			$departments = new Department();
+			$departments->department = $request->department;
+			$departments->description = $request->description;
+			$departments->created_by = Auth::user()->id;
+			$departments->updated_by = Auth::user()->id;
+			$departments->save();
+			DB::commit();
+			$msg = 'Department is created successfully';
+			$response =  http_201($msg, $departments);
+		} catch (\Exception $e){
+			DB::rollback();
+			$response = response()->json(['error' => $e->getMessage()], 500);
+		}
+		return $response;
     }
 
     public function update(Request $request,$id)
     {
         $userid = Auth::user()->id;
         $department = Department::find($id);
-        
+
         if(!$department){
             $msg = 'Sorry, Department with id '.$id.' cannot be found';
             error_404(false,$msg);
             die;
         }
-        
+
         $validator = Validator::make($request->all(),$this->validationRules);
         if($validator->fails()){
             return response()->json($validator->errors());
         }
 
-        $dept_name = $request->department_name;
+        $dept_name = $request->department;
         $dept_desc = $request->description;
         $updated =  $department->update([
                         'department'    =>  $dept_name,
@@ -114,19 +122,19 @@ class DepartmentController extends Controller
                     ]);
 
         $msg = 'Department is updated successfully';
-        success_200(true,$updated,$msg);
+		return  http_201($msg, $department);
     }
 
     public function destroy($id){
         $department = Department::find($id);
-        
+
         if(!$department){
             $msg = 'Sorry, Department with id '.$id.' cannot be found';
             error_404(false,$msg);
             die;
         }
-        
-        $deleted = $department->delete(); 
+
+        $deleted = $department->delete();
         $msg = 'Department is deleted';
         success_200(true,$msg,'');
     }

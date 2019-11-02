@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Role;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Validator;
 use Auth;
@@ -120,15 +121,26 @@ class RoleController extends Controller
 	 */
 	private function createRole($request)
 	{
-		$role = new Role();
-		$role->name = $request->input('name');
-		$role->description = $request->input('description');
-		$role->display_name = $request->input('display_name');
-		$role->created_at = date('Y-m-d H:i:s');
-		$role->updated_at = date('Y-m-d H:i:s');
-		$role->save();
+		DB::beginTransaction();
 
-		return http_201('Role entry has been created successfully', $role);
+		try {
+			$role = new Role();
+			$role->name = $request->input('name');
+			$role->description = $request->input('description');
+			$role->display_name = $request->input('display_name');
+			$role->created_at = date('Y-m-d H:i:s');
+			$role->updated_at = date('Y-m-d H:i:s');
+			$role->save();
+			$response = http_201('Role entry has been created successfully', $role);
+
+			DB::commit();
+
+		} catch (\Exception $e) {
+			DB::rollback();
+			$response = response()->json(['error' => $e->getMessage()], 500);
+		}
+
+		return $response;
 	}
 
 	/**
@@ -191,6 +203,12 @@ class RoleController extends Controller
 	 */
 	public function destroy($id)
 	{
+		$roleData = Role::find($id);
+
+		if (!$roleData) {
+			return error_404();
+		}
+
 		$role = Role::where('id', '=', $id)->first();
 		$role->delete();
 
