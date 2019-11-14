@@ -25,7 +25,7 @@ class EmailQueues extends Migration
 			$table->text('template_details')->nullable();
 			$table->text('attachments')->comment('Comma Separated')->nullable();
             $table->integer('error')->default(0);
-            $table->string('error_message')->nullable();
+            $table->string('error_message',1000)->nullable();
 			$table->enum('priority', [1, 2, 3])->comment('1 => Notifications, 2=> Reminders, 3=> Wishes & One Year Completion');
 			$table->boolean('status')->default(0)->comment('0 => Pending, 1=> Processed');
 			$table->index(['priority','status']);

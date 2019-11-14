@@ -73,11 +73,11 @@ class SendEmail extends Controller
 
     public function testmail()
     {
-        // Route::get('testmail', 'SendEmail@testmail');
-        // Route::get('insertEmails', 'SendEmail@insertEmails');
-        // Route::get('generateView', 'SendEmail@generateView');
-        // Route::get('sendRegularEmails', 'SendEmail@sendRegularEmails');
-        // Route::get('reportFailedEmails', 'SendEmail@reportFailedEmails');
+        // Route::get('testmail', 'API\SendEmail@testmail');
+        // Route::get('insertEmails', 'API\SendEmail@insertEmails');
+        // Route::get('generateView', 'API\SendEmail@generateView');
+        // Route::get('sendRegularEmails', 'API\SendEmail@sendRegularEmails');
+        // Route::get('reportFailedEmails', 'API\SendEmail@reportFailedEmails');
 
         try {
             $comment = json_decode('{"name":"Mr. Test User (S/W)","message":"On This Special Day As You Celebrate Your Birthday Here’s Wishing You a Whole Lotta Happiness And Sweet Surprises. Happy Birthday 1!!!","image":"birthday_cards/card1.jpg"}', true);
@@ -105,8 +105,9 @@ class SendEmail extends Controller
 
     public function generateView()
     {
-        echo url(config('constants.IMAGE_UPLOAD_PATH'));
-        echo base_path('uploads');
+        echo url(config('constants.IMAGE_UPLOAD_PATH')).'<br>';
+        echo base_path('uploads').'<br>';
+        echo asset(config('constants.IMAGE_UPLOAD_PATH').'/123').'<br>';
         die;
         echo config('constants.IMAGE_UPLOAD_PATH');
         die;

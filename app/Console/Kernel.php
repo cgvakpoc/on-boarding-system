@@ -27,21 +27,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->call(function () { EmailQueues::truncate(); })->everyMinute();
-        $schedule->call('App\Http\Controllers\API\SendEmail@insertEmails')->everyMinute();
-        //$schedule->call('App\Http\Controllers\API\SendEmail@sendRegularEmails')->everyMinute();
-        //$schedule->call('App\Http\Controllers\API\SendEmail@reportFailedEmails')->everyMinute();
+        // $schedule->call(function () { EmailQueues::truncate(); })->everyMinute();
+        // $schedule->call('App\Http\Controllers\API\SendEmail@insertEmails')->everyMinute();
+        $schedule->call('App\Http\Controllers\API\SendEmail@sendRegularEmails')->everyMinute();
+        $schedule->call('App\Http\Controllers\API\SendEmail@reportFailedEmails')->everyMinute();
     }
 
     /**
-     * Register the commands for the application.
+     * Register the Closure based commands for the application.
      *
      * @return void
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
-
         require base_path('routes/console.php');
     }
 }
