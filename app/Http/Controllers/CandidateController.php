@@ -130,6 +130,7 @@ class CandidateController extends Controller
 
 	public function updateCandidate(Request $request)
 	{
+		$userid = Auth::user()->id;
 		$id = $request->id;
 		$candidate = Candidate::find($id);
 

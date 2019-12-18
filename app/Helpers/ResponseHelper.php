@@ -27,3 +27,5 @@ if (!function_exists('error_404')) {
 		return response()->json(['success' => false, 'message' => 'No data found', 'data' => ''], 404);
 	}
 }
+
+
