@@ -51,7 +51,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'User not logged in'
+                'message' => 'Unauthorized access'
             ], $exception->getStatusCode());
         }
 
