@@ -4,6 +4,9 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use DB;
+Use App\User;
+Use App\EmailQueues;
 
 class Kernel extends ConsoleKernel
 {
@@ -24,8 +27,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        // $schedule->call(function () { EmailQueues::truncate(); })->everyMinute();
+        // $schedule->call('App\Http\Controllers\API\SendEmail@insertEmails')->everyMinute();
+        $schedule->call('App\Http\Controllers\API\SendEmail@sendRegularEmails')->everyMinute();
+        $schedule->call('App\Http\Controllers\API\SendEmail@reportFailedEmails')->everyMinute();
     }
 
     /**
