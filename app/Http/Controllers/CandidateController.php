@@ -248,7 +248,7 @@ class CandidateController extends Controller
 	{	
 		$id = $request->id;
 		$doc_list = Candidate::find($id);
-		if(count($doc_list) === 0){
+		if(count((array)$doc_list) === 0){
 			$error_msg = 'Sorry, Documents for id '.$id.' cannot be found';
 			error_404(false,$error_msg);
 			die;
@@ -272,7 +272,7 @@ class CandidateController extends Controller
 	public function add(Request $request)// Add Candidate Documents
 	{
 		$candidate_docs = CandidateDocument::where('candidate_id',$request->id)->first();
-		if(count($candidate_docs) > 0){
+		if(count((array)$candidate_docs) > 0){
 			$msg = "Data already exists";
 			bad_request(false,$msg);
 			die;
@@ -302,7 +302,7 @@ class CandidateController extends Controller
 	{
 		$id = $request->id;
 		$candidate_docs = CandidateDocument::where('candidate_id',$id)->first();
-		if(count($candidate_docs) === 0){
+		if(count((array)$candidate_docs) === 0){
 			$msg = 'Sorry, Documents for id '.$id.' cannot be found';
 			error_404(false,$msg);
 			die;
