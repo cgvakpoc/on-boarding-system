@@ -47,7 +47,7 @@ Route::group(['middleware' => 'auth.jwt'], function () {
 
 	Route::apiResource('departments', 'DepartmentController');
 	Route::apiResource('roles', 'Role\RoleController');
-	Route::apiResource('permission', 'Role\PermissionController');
+	Route::apiResource('permission/{roleId}', 'Role\PermissionController');
 	Route::apiResource('leads','LeadController');
 });
 
