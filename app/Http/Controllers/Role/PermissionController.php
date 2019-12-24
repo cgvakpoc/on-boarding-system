@@ -53,14 +53,14 @@ class PermissionController extends Controller
 		$data = $request->all();
 		$permissionId = [];
 
-		$validator = Validator::make($request->all(), ["*.permissionId" => "required|integer"]);
+		$validator = Validator::make($request->all(), ["permissionId" => "required"]);
 
 		if ($validator->fails()) {
 			return http_200(false, 'Validation Error', $validator->errors());
 		}
 
-		foreach ($data as $d) {
-			array_push($permissionId, $d['permissionId']);
+		foreach ($data['permissionId'] as $d) {
+			array_push($permissionId, $d);
 		}
 		return $this->createRolePermission($permissionId, $roleId);
 	}
