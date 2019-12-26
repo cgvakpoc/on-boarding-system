@@ -14,11 +14,11 @@ class TaskController extends Controller
 {
     public function __construct(Request $request)
     {
-    	if(!isset($request->token)){
-    		return response()->json(['status'	=>	false]);
-    	}
+    	// if(!isset($request->token)){
+    	// 	return response()->json(['status'	=>	false]);
+    	// }
 
-    	$this->user = JWTAuth::parseToken()->authenticate();
+    	// $this->user = JWTAuth::parseToken()->authenticate();
     }
 
     protected $validationRules = [

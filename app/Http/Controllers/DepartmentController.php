@@ -16,10 +16,10 @@ class DepartmentController extends Controller
 
     public function __construct(Request $request)
     {
-        if(!isset($request->token)){
-            return response()->json(['success' => false]);
-        }
-        $this->user = JWTAuth::parseToken()->authenticate();
+        // if(!isset($request->token)){
+        //     return response()->json(['success' => false]);
+        // }
+        // $this->user = JWTAuth::parseToken()->authenticate();
     }
 
     protected $validationRules = [

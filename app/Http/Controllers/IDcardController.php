@@ -13,11 +13,11 @@ class IDcardController extends Controller
 {
     public function __construct(Request $Request)
     {
-    	if(!isset($request->token)){
-    		return response()->json(['success'	=>	false]);
-    	}
+    	// if(!isset($request->token)){
+    	// 	return response()->json(['success'	=>	false]);
+    	// }
 
-    	$this->user = JWTAuth::parseToken()->authenticate();
+    	// $this->user = JWTAuth::parseToken()->authenticate();
     }
     protected $validationRules = [
         'candidate_name'    =>  'required|string|min:3|max:255',

@@ -28,10 +28,10 @@ class FactSheetController extends Controller
 
     public function __construct(Request $request)
     {
-        if(!isset($request->token)){
-            return response()->json(['success' => false]);
-        }
-        $this->user = JWTAuth::parseToken()->authenticate();
+        // if(!isset($request->token)){
+        //     return response()->json(['success' => false]);
+        // }
+        // $this->user = JWTAuth::parseToken()->authenticate();
     }
 
     protected $validationRules = [
@@ -93,13 +93,20 @@ class FactSheetController extends Controller
 
     public function add_languages($request){
     	$id = $this->last_id();
-    	$languages = $request->languages;
+        $languages = $request->languages;
+        //if(is_array($languages)){
     	foreach($languages as $key => $value){
     		Language::Create([
     			'joinee_id' => $id,
     			'language'	=> $value['language']
     		]);
-    	}
+        }
+    // }else{
+    //     Language::Create([
+    //         'joinee_id' => $id,
+    //         'language'	=> $languages
+    //     ]);
+    // }
     }
 
     public function add_education($request){
@@ -462,27 +469,54 @@ class FactSheetController extends Controller
         	'reject_reason' => $request->reason
         ]);
     }
+   
 
     public function add(Request $request)
     {
+        // print_r($request->all());
+        // echo "--------------\n";
+        // print_r($request->candidate_name);
+        // echo "--------------\n";
+        // print_r($request->candidate_dob);
+        // echo "--------------\n";
+        // print_r($request->candidate_town);
+        // echo "--------------\n";
+        // print_r($request->candidate_state);
+        // echo "--------------\n";
+        // print_r($request->candidate_father_name);
+        // echo "--------------\n";
+        // die;
         $validator = Validator::make($request->all(),$this->validationRules);
         if($validator->fails()){
             return response()->json($validator->errors(),404);
         }
         DB::beginTransaction();
         try{
+            
             $this->add_factsheet($request);
+            // echo "-------added_factsheet-------\n";
             $this->add_languages($request);
+            // echo "-------added_languages-------\n";
             $this->add_siblings($request);
+            // echo "-------added_siblings-------\n";
             $this->add_education($request);
+            // echo "-------added_education-------\n";
             $this->add_highschool($request);
+            // echo "-------addde_highschool-------\n";
             $this->add_certifications($request);
+            // echo "-------added_certifications-------\n";
             $this->add_rating($request);
+            // echo "------addde_rating--------\n";
             $this->add_experience($request);
+            // echo "-------added_experience-------\n";
             $this->add_remuneration($request);
+            // echo "--------addde_remuneration------\n";
             $this->add_job_details($request);
+            // echo "------added_job_details--------\n";
             $this->add_activity($request);
+            // echo "------added_activity--------\n";
             $this->add_visadetails($request);
+            // echo "---------added_visadetails-----\n";
 			DB::commit();
         }
         catch(\Exception $e){
