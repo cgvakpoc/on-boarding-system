@@ -121,7 +121,8 @@ class ApiController extends Controller
 
 	public function getAuthUser(Request $request)
 	{
-		$this->validate($request, ['token' => 'required']);
+		//Commented on 26/12/2019. Reason: validation done in middleware
+		// $this->validate($request, ['token' => 'required']);
 
 		$user = JWTAuth::authenticate($request->token);
 

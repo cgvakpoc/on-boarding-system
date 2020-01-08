@@ -22,306 +22,97 @@ use App\FactSheet\Activity;
 
 class FactSheetController extends Controller
 {
-	protected $user;
+    protected $user;
 
- 	protected $insert_id;
+    protected $insert_id;
 
     public function __construct(Request $request)
     {
-        if(!isset($request->token)){
-            return response()->json(['success' => false]);
-        }
-        $this->user = JWTAuth::parseToken()->authenticate();
+        // if(!isset($request->token)){
+        //     return response()->json(['success' => false]);
+        // }
+        // $this->user = JWTAuth::parseToken()->authenticate();
     }
 
     protected $validationRules = [
-        'position_applied'      	=>  'required',
-        'candidate_name'        	=>  'required|string|min:3|max:255',
-        'candidate_age'         	=>  'required|numeric',
-        'candidate_dob'         	=>  'required',
-        'candidate_town'        	=>  'required',
-        'candidate_state'       	=>  'required',
-        'candidate_father_name' 	=>  'required',
-        'father_occupation'			=>  'required',
-        'marital_status'        	=>  'required',
-        'candidate_religion'    	=>  'required',
-        'candidate_address'     	=>  'required',
-        'candidate_mobile'      	=>  'required|numeric|digits_between:10,12|unique:fact_sheet,mobile',
-        'phone'						=>	'numeric|digits_between:6,10|unique:fact_sheet,phonenumber',
-        'candidate_email'       	=>  'required|unique:fact_sheet,email',
-        'languages'             	=>  'required',
-        'education'             	=>  'required',
-        'maths_10_marks'        	=>  'required',
-        'maths_12_marks'        	=>  'required',
-        'ratings'               	=>  'required',
+        'position_applied'          =>  'required',
+        'candidate_name'            =>  'required|string|min:3|max:255',
+        'candidate_age'             =>  'required|numeric',
+        'candidate_dob'             =>  'required',
+        'candidate_town'            =>  'required',
+        'candidate_state'           =>  'required',
+        'candidate_father_name'     =>  'required',
+        'father_occupation'         =>  'required',
+        'marital_status'            =>  'required',
+        'candidate_religion'        =>  'required',
+        'candidate_address'         =>  'required',
+        'candidate_mobile'          =>  'required|numeric|digits_between:10,12|unique:fact_sheet,mobile',
+        'phone'                     =>  'numeric|digits_between:6,10|unique:fact_sheet,phonenumber',
+        'candidate_email'           =>  'required|unique:fact_sheet,email',
+        'languages'                 =>  'required',
+        'education'                 =>  'required',
+        'maths_10_marks'            =>  'required',
+        'maths_12_marks'            =>  'required',
+        'ratings'                   =>  'required',
         'ambition'                  =>  'required',
         'passport'                  =>  'required'
     ];
 
-    public function last_id(){
-    	$this->insert_id = DB::table('fact_sheet')->latest()->first();
-    	return $this->insert_id->id;
+    public function last_id()
+    {
+        $this->insert_id = DB::table('fact_sheet')->latest()->first();
+        return $this->insert_id->id;
     }
 
-    public function add_factsheet($request){
-    	$form_state = 1;
-        if($request->form_save === 'submit'){
-        	$form_state = 0;
+    public function add_factsheet($request)
+    {
+        $form_state = 1;
+        if ($request->form_save === 'submit') {
+            $form_state = 0;
         }
 
         $dateofbirth = convert_date($request->candidate_dob);
         FactSheet::Create([
-        	'name'				=>	$request->candidate_name,
-        	'pos_applied'		=>	$request->position_applied,
-        	'email'				=>	$request->candidate_email,
-        	'phonenumber'		=>	$request->phone,
-        	'mobile'			=>	$request->candidate_mobile,
-        	'age'				=>	$request->candidate_age,
-        	'dob'				=>	$dateofbirth,
-        	'address'			=>	$request->candidate_address,
-        	'town'				=>	$request->candidate_town,
-        	'state'				=>	$request->candidate_state,
-        	'father_name'		=>	$request->candidate_father_name,
-        	'father_occupation'	=>	$request->father_occupation,
-        	'marital_status'	=>	$request->marital_status,
-        	'spouse_name'		=>	$request->spouse_name,
-        	'spouse_occupation'	=>	$request->spouse_occupation,
-        	'religion'			=>	$request->candidate_religion,
-        	'edit_state'		=>	$form_state
+            'name'                =>    $request->candidate_name,
+            'pos_applied'         =>    $request->position_applied,
+            'email'               =>    $request->candidate_email,
+            'phonenumber'         =>    $request->phone,
+            'mobile'              =>    $request->candidate_mobile,
+            'age'                 =>    $request->candidate_age,
+            'dob'                 =>    $dateofbirth,
+            'address'             =>    $request->candidate_address,
+            'town'                =>    $request->candidate_town,
+            'state'               =>    $request->candidate_state,
+            'father_name'         =>    $request->candidate_father_name,
+            'father_occupation'   =>    $request->father_occupation,
+            'marital_status'      =>    $request->marital_status,
+            'spouse_name'         =>    $request->spouse_name,
+            'spouse_occupation'   =>    $request->spouse_occupation,
+            'religion'            =>    $request->candidate_religion,
+            'edit_state'          =>    $form_state
         ]);
     }
 
-    public function add_languages($request){
-    	$id = $this->last_id();
-    	$languages = $request->languages;
-    	foreach($languages as $key => $value){
-    		Language::Create([
-    			'joinee_id' => $id,
-    			'language'	=> $value['language']
-    		]);
-    	}
-    }
-
-    public function add_education($request){
+    public function add_languages($request)
+    {
         $id = $this->last_id();
-        $education = $request->education;
-        foreach($education as $key => $value) {
-            Education::Create([
-                'joinee_id'         =>  $id,
-                'from'              =>  $value['from'],
-                'to'                =>  $value['to'],
-                'qualification'     =>  $value['qualification'],
-                'course_name'       =>  $value['course_name'],
-                'institution_name'  =>  $value['institution'],
-                'medium'            =>  $value['medium'],
-                'percentage'        =>  $value['percentage'],
-                'arrears'           =>  $value['arrears'],
-                'class_obtained'    =>  $value['class_obtained']
-            ]);
-        }
-    }
-
-    public function add_highschool($request){
-        $id = $this->last_id();
-        HighSchool::Create([
-        	'joinee_id'			=> $id,
-        	'maths_marks_10'	=> $request->maths_10_marks,
-        	'maths_marks_12'	=> $request->maths_12_marks
-        ]);
-    }
-
-    public function add_siblings($request){
-        $id = $this->last_id();
-        $joinee_sibling = $request->siblings;
-        foreach($joinee_sibling as $key => $value) {
-            JoineeSibling::Create([
-               'joinee_id'      => $id,
-               'sibling_name'   => $value['sibling_name'],
-               'course'         => $value['course'],
-               'institution'    => $value['institution']
-            ]);
-        }
-    }
-
-    public function add_certifications($request){
-        $id = $this->last_id();
-        $certifications = $request->certifications;
-        foreach($certifications as $key => $value){
-            JoineeCertification::Create([
-                'joinee_id'             =>  $id,
-                'certification_name'    =>  $value['certification_name'],
-                'completion_year'       =>  $value['completion_year']
-            ]);
-        }
-    }
-
-    public function add_rating($request){
-        $id = $this->last_id();
-        $ratings = $request->ratings;
-        foreach ($ratings as $key => $value) {
-            JoineeSoftwareRating::Create([
-                'joinee_id'         =>  $id,
-                'software_subject'  =>  $value['subject'],
-                'software_rating'   =>  $value['rating']
-            ]);
-        }
-    }
-
-    public function add_experience($request){
-        $id = $this->last_id();
-        $experience = $request->experience;
-        if($experience != ''){
-            foreach ($experience as $key => $value) {
-                $date_from = convert_date($value['work_from']);
-                $date_to = convert_date($value['work_to']);
-                JoineeExperience::Create([
-                    'joinee_id'         =>  $id,
-                    'from'              =>  $date_from,
-                    'to'                =>  $date_to,
-                    'total_exp'         =>  $value['total_exp'],
-                    'designation'       =>  $value['designation'],
-                    'organisation'      =>  $value['organisation'],
-                    'location'          =>  $value['location'],
-                    'reason_to_leave'   =>  $value['reason_to_leave']
-                ]);
-            }
-        }
-    }
-
-    public function add_activity($request){
-    	$id = $this->last_id();
-        $activities = $request->activities;
-        if($activities != ''){
-            foreach($activities as $key => $value){
-                Activity::Create([
-                    'joinee_id' =>  $id,
-                    'activity'  =>  $value['activity']
-                ]);
-            }
-        }
-    }
-
-    public function add_remuneration($request){
-        $id = $this->last_id();
-        JoineeRemuneration::Create([
-            'joinee_id'         =>  $id,
-            'take_home_sal'     =>  $request->salary,
-            'deductions'        =>  $request->deductions,
-            'monthly_ctc'       =>  $request->monthly_ctc,
-            'yearly_ctc'        =>  $request->yearly_ctc,
-            'others'            =>  $request->others
-        ]);
-    }
-
-    public function add_job_details($request){
-        $id = $this->last_id();
-        JoineeJobDetails::Create([
-        	'joinee_id' 		=> $id,
-        	'responsibilities'	=> $request->responsibilities,
-        	'achievements'		=> $request->achievements,
-        	'ambition'			=> $request->ambition,
-        	'passport'			=> $request->passport
-        ]);
-    }
-
-    public function add_visadetails($request){
-        $id = $this->last_id();
-        JoineeVisa::Create([
-        	'joinee_id'		=> $id,
-        	'visa_applied'	=> $request->visa_applied,
-        	'reject_reason' => $request->reason
-        ]);
-    }
-
-    public function show_rating($id){
-    	$rating = DB::table('joinee_software_rating as t1')
-    			  ->select('t1.software_subject as subject','t2.rating_name as rating')
-        		  ->join('proficiency_rating as t2','t1.software_rating','=','t2.id')
-        		  ->where('t1.joinee_id',$id)
-        		  ->get();
-       	return $rating;
-    }
-
-    public function show_details($id){
-    	$details = DB::table('fact_sheet as t1')
-    			  ->select('t1.name','t1.pos_applied as position','t1.email','t1.phonenumber','t1.mobile','t1.age','t1.dob','t1.address','t2.town','t3.state','t1.father_name','t1.father_occupation','t4.status_name as marital_status','t1.spouse_name','t1.spouse_occupation','t1.religion')
-        		  ->join('towns as t2','t1.town','t2.id')
-        		  ->join('states as t3','t1.state','t3.id')
-        		  ->join('status as t4','t1.marital_status','t4.id')
-        		  ->where('t1.id',$id)
-        		  ->get();
-       	return $details;
-    }
-
-    public function show_jobDetails($id){
-    	$job = DB::table('job_details as t1')
-    			  ->select('t1.responsibilities','t1.achievements','t1.ambition','t2.status_name as passport')
-        		  ->join('status as t2','t1.passport','t2.id')
-        		  ->join('fact_sheet as t3','t1.joinee_id','t3.id')
-        		  ->where('t3.id',$id)
-        		  ->get();
-       	return $job;
-    }
-
-    public function show_visa($id){
-    	$visa = DB::table('visa_details as t1')
-    			  ->select('t2.status_name as applied','t1.reject_reason as reason')
-    			  ->join('status as t2','t1.visa_applied','t2.id')
-        		  ->join('fact_sheet as t3','t1.joinee_id','t3.id')
-        		  ->where('t3.id',$id)
-        		  ->get();
-       	return $visa;
-    }
-
-    public function update_factsheet($request){
-    	$id = $request->id;
-    	$dateofbirth = convert_date($request->candidate_dob);
-    	$form_state = 1;
-    	if($request->form_save === 'submit'){
-    		$form_state = 0;
-    	}
-
-    	$update_fact = FactSheet::where('id',$id)->update([
-    		'name'				=>	$request->candidate_name,
-        	'pos_applied'		=>	$request->position_applied,
-        	'email'				=>	$request->candidate_email,
-        	'phonenumber'		=>	$request->phone,
-        	'mobile'			=>	$request->candidate_mobile,
-        	'age'				=>	$request->candidate_age,
-        	'dob'				=>	$dateofbirth,
-        	'address'			=>	$request->candidate_address,
-        	'town'				=>	$request->candidate_town,
-        	'state'				=>	$request->candidate_state,
-        	'father_name'		=>	$request->candidate_father_name,
-        	'father_occupation'	=>	$request->father_occupation,
-        	'marital_status'	=>	$request->marital_status,
-        	'spouse_name'		=>	$request->spouse_name,
-        	'spouse_occupation'	=>	$request->spouse_occupation,
-        	'religion'			=>	$request->candidate_religion,
-        	'edit_state'		=>	$form_state
-    	]);
-    }
-
-    public function update_languages($request){
-        $id = $request->id;
         $languages = $request->languages;
-        if($languages != ''){
-            Language::where('joinee_id',$id)->delete();
-            foreach($languages as $key => $value){
+        if (!empty($languages)) {
+            foreach ($languages as $key => $value) {
                 Language::Create([
                     'joinee_id' => $id,
-                    'language'  => $value['language']
+                    'language'    => $value['language']
                 ]);
             }
         }
     }
 
-    public function update_education($request){
-    	$id = $request->id;
-    	$education = $request->education;
-        if($education != ''){
-            Education::where('joinee_id',$id)->delete();
-            foreach($education as $key => $value){
+    public function add_education($request)
+    {
+        $id = $this->last_id();
+        $education = $request->education;
+        if (!empty($education)) {
+            foreach ($education as $key => $value) {
                 Education::Create([
                     'joinee_id'         =>  $id,
                     'from'              =>  $value['from'],
@@ -338,51 +129,51 @@ class FactSheetController extends Controller
         }
     }
 
-    public function update_siblings($request){
-    	$id = $request->id;
-    	$siblings = $request->siblings;
-    	if($siblings != ''){
-    		JoineeSibling::where('joinee_id',$id)->delete();
-	    	foreach($siblings as $key => $value){
-	    		JoineeSibling::Create([
-	    			'joinee_id'      => $id,
-		            'sibling_name'   => $value['sibling_name'],
-		            'course'         => $value['course'],
-		            'institution'    => $value['institution']
-	    		]);
-	    	}
-    	}
-    }
-
-    public function update_certification($request){
-    	$id = $request->id;
-    	$certifications = $request->certifications;
-    	if($certifications != ''){
-    		JoineeCertification::where('joinee_id',$id)->delete();
-	    	foreach($certifications as $key => $value){
-	    		JoineeCertification::Create([
-	    			'joinee_id'             =>  $id,
-	                'certification_name'    =>  $value['certification_name'],
-	                'completion_year'       =>  $value['completion_year']
-	    		]);
-	    	}
-    	}
-    }
-
-    public function update_highschool($request){
-    	$id = $request->id;
-    	HighSchool::where('joinee_id',$id)->delete();
-		HighSchool::Create([
-			'joinee_id'         => $id,
+    public function add_highschool($request)
+    {
+        $id = $this->last_id();
+        HighSchool::Create([
+            'joinee_id'            => $id,
             'maths_marks_10'    => $request->maths_10_marks,
             'maths_marks_12'    => $request->maths_12_marks
-		]);
+        ]);
     }
 
-    public function update_ratings($request){
-    	$id = $request->id;
+    public function add_siblings($request)
+    {
+        $id = $this->last_id();
+        $joinee_sibling = $request->siblings;
+        if (!empty($joinee_sibling)) {
+            foreach ($joinee_sibling as $key => $value) {
+                JoineeSibling::Create([
+                    'joinee_id'      => $id,
+                    'sibling_name'   => $value['sibling_name'],
+                    'course'         => $value['course'],
+                    'institution'    => $value['institution']
+                ]);
+            }
+        }
+    }
+
+    public function add_certifications($request)
+    {
+        $id = $this->last_id();
+        $certifications = $request->certifications;
+        if (!empty($certifications)) {
+            foreach ($certifications as $key => $value) {
+                JoineeCertification::Create([
+                    'joinee_id'             =>  $id,
+                    'certification_name'    =>  $value['certification_name'],
+                    'completion_year'       =>  $value['completion_year']
+                ]);
+            }
+        }
+    }
+
+    public function add_rating($request)
+    {
+        $id = $this->last_id();
         $ratings = $request->ratings;
-    	JoineeSoftwareRating::where('joinee_id',$id)->delete();
         foreach ($ratings as $key => $value) {
             JoineeSoftwareRating::Create([
                 'joinee_id'         =>  $id,
@@ -392,11 +183,11 @@ class FactSheetController extends Controller
         }
     }
 
-    public function update_experience($request){
-    	$id = $request->id;
+    public function add_experience($request)
+    {
+        $id = $this->last_id();
         $experience = $request->experience;
-        if($experience != ''){
-            JoineeExperience::where('joinee_id',$id)->delete();
+        if ($experience != '') {
             foreach ($experience as $key => $value) {
                 $date_from = convert_date($value['work_from']);
                 $date_to = convert_date($value['work_to']);
@@ -414,9 +205,23 @@ class FactSheetController extends Controller
         }
     }
 
-    public function update_remuneration($request){
-    	$id = $request->id;
-        JoineeRemuneration::where('joinee_id',$id)->delete();
+    public function add_activity($request)
+    {
+        $id = $this->last_id();
+        $activities = $request->activities;
+        if ($activities != '') {
+            foreach ($activities as $key => $value) {
+                Activity::Create([
+                    'joinee_id' =>  $id,
+                    'activity'  =>  $value['activity']
+                ]);
+            }
+        }
+    }
+
+    public function add_remuneration($request)
+    {
+        $id = $this->last_id();
         JoineeRemuneration::Create([
             'joinee_id'         =>  $id,
             'take_home_sal'     =>  $request->salary,
@@ -427,24 +232,255 @@ class FactSheetController extends Controller
         ]);
     }
 
-    public function update_job_details($request){
-    	$id = $request->id;
-        JoineeJobDetails::where('joinee_id',$id)->delete();
+    public function add_job_details($request)
+    {
+        $id = $this->last_id();
         JoineeJobDetails::Create([
-        	'joinee_id' 		=> $id,
-        	'responsibilities'	=> $request->responsibilities,
-        	'achievements'		=> $request->achievements,
-        	'ambition'			=> $request->ambition,
-        	'passport'			=> $request->passport
+            'joinee_id'         => $id,
+            'responsibilities'    => $request->responsibilities,
+            'achievements'        => $request->achievements,
+            'ambition'            => $request->ambition,
+            'passport'            => $request->passport
         ]);
     }
 
-    public function update_activity($request){
+    public function add_visadetails($request)
+    {
+        $id = $this->last_id();
+        JoineeVisa::Create([
+            'joinee_id'        => $id,
+            'visa_applied'    => $request->visa_applied,
+            'reject_reason' => $request->reason
+        ]);
+    }
+
+    public function show_rating($id)
+    {
+        $rating = DB::table('joinee_software_rating as t1')
+            ->select('t1.software_subject as subject', 't2.rating_name as rating')
+            ->join('proficiency_rating as t2', 't1.software_rating', '=', 't2.id')
+            ->where('t1.joinee_id', $id)
+            ->get();
+        return $rating;
+    }
+
+    public function show_details($id)
+    {
+        $details = DB::table('fact_sheet as t1')
+            ->select('t1.name', 't1.pos_applied as position', 't1.email', 't1.phonenumber', 't1.mobile', 't1.age', 't1.dob', 't1.address', 't2.town', 't3.state', 't1.father_name', 't1.father_occupation', 't4.status_name as marital_status', 't1.spouse_name', 't1.spouse_occupation', 't1.religion')
+            ->join('towns as t2', 't1.town', 't2.id')
+            ->join('states as t3', 't1.state', 't3.id')
+            ->join('status as t4', 't1.marital_status', 't4.id')
+            ->where('t1.id', $id)
+            ->get();
+        return $details;
+    }
+
+    public function show_jobDetails($id)
+    {
+        $job = DB::table('job_details as t1')
+            ->select('t1.responsibilities', 't1.achievements', 't1.ambition', 't2.status_name as passport')
+            ->join('status as t2', 't1.passport', 't2.id')
+            ->join('fact_sheet as t3', 't1.joinee_id', 't3.id')
+            ->where('t3.id', $id)
+            ->get();
+        return $job;
+    }
+
+    public function show_visa($id)
+    {
+        $visa = DB::table('visa_details as t1')
+            ->select('t2.status_name as applied', 't1.reject_reason as reason')
+            ->join('status as t2', 't1.visa_applied', 't2.id')
+            ->join('fact_sheet as t3', 't1.joinee_id', 't3.id')
+            ->where('t3.id', $id)
+            ->get();
+        return $visa;
+    }
+
+    public function update_factsheet($request)
+    {
+        $id = $request->id;
+        $dateofbirth = convert_date($request->candidate_dob);
+        $form_state = 1;
+        if ($request->form_save === 'submit') {
+            $form_state = 0;
+        }
+
+        $update_fact = FactSheet::where('id', $id)->update([
+            'name'                =>    $request->candidate_name,
+            'pos_applied'        =>    $request->position_applied,
+            'email'                =>    $request->candidate_email,
+            'phonenumber'        =>    $request->phone,
+            'mobile'            =>    $request->candidate_mobile,
+            'age'                =>    $request->candidate_age,
+            'dob'                =>    $dateofbirth,
+            'address'            =>    $request->candidate_address,
+            'town'                =>    $request->candidate_town,
+            'state'                =>    $request->candidate_state,
+            'father_name'        =>    $request->candidate_father_name,
+            'father_occupation'    =>    $request->father_occupation,
+            'marital_status'    =>    $request->marital_status,
+            'spouse_name'        =>    $request->spouse_name,
+            'spouse_occupation'    =>    $request->spouse_occupation,
+            'religion'            =>    $request->candidate_religion,
+            'edit_state'        =>    $form_state
+        ]);
+    }
+
+    public function update_languages($request)
+    {
+        $id = $request->id;
+        $languages = $request->languages;
+        if ($languages != '') {
+            Language::where('joinee_id', $id)->delete();
+            foreach ($languages as $key => $value) {
+                Language::Create([
+                    'joinee_id' => $id,
+                    'language'  => $value['language']
+                ]);
+            }
+        }
+    }
+
+    public function update_education($request)
+    {
+        $id = $request->id;
+        $education = $request->education;
+        if ($education != '') {
+            Education::where('joinee_id', $id)->delete();
+            foreach ($education as $key => $value) {
+                Education::Create([
+                    'joinee_id'         =>  $id,
+                    'from'              =>  $value['from'],
+                    'to'                =>  $value['to'],
+                    'qualification'     =>  $value['qualification'],
+                    'course_name'       =>  $value['course_name'],
+                    'institution_name'  =>  $value['institution'],
+                    'medium'            =>  $value['medium'],
+                    'percentage'        =>  $value['percentage'],
+                    'arrears'           =>  $value['arrears'],
+                    'class_obtained'    =>  $value['class_obtained']
+                ]);
+            }
+        }
+    }
+
+    public function update_siblings($request)
+    {
+        $id = $request->id;
+        $siblings = $request->siblings;
+        if ($siblings != '') {
+            JoineeSibling::where('joinee_id', $id)->delete();
+            foreach ($siblings as $key => $value) {
+                JoineeSibling::Create([
+                    'joinee_id'      => $id,
+                    'sibling_name'   => $value['sibling_name'],
+                    'course'         => $value['course'],
+                    'institution'    => $value['institution']
+                ]);
+            }
+        }
+    }
+
+    public function update_certification($request)
+    {
+        $id = $request->id;
+        $certifications = $request->certifications;
+        if ($certifications != '') {
+            JoineeCertification::where('joinee_id', $id)->delete();
+            foreach ($certifications as $key => $value) {
+                JoineeCertification::Create([
+                    'joinee_id'             =>  $id,
+                    'certification_name'    =>  $value['certification_name'],
+                    'completion_year'       =>  $value['completion_year']
+                ]);
+            }
+        }
+    }
+
+    public function update_highschool($request)
+    {
+        $id = $request->id;
+        HighSchool::where('joinee_id', $id)->delete();
+        HighSchool::Create([
+            'joinee_id'         => $id,
+            'maths_marks_10'    => $request->maths_10_marks,
+            'maths_marks_12'    => $request->maths_12_marks
+        ]);
+    }
+
+    public function update_ratings($request)
+    {
+        $id = $request->id;
+        $ratings = $request->ratings;
+        JoineeSoftwareRating::where('joinee_id', $id)->delete();
+        foreach ($ratings as $key => $value) {
+            JoineeSoftwareRating::Create([
+                'joinee_id'         =>  $id,
+                'software_subject'  =>  $value['subject'],
+                'software_rating'   =>  $value['rating']
+            ]);
+        }
+    }
+
+    public function update_experience($request)
+    {
+        $id = $request->id;
+        $experience = $request->experience;
+        if ($experience != '') {
+            JoineeExperience::where('joinee_id', $id)->delete();
+            foreach ($experience as $key => $value) {
+                $date_from = convert_date($value['work_from']);
+                $date_to = convert_date($value['work_to']);
+                JoineeExperience::Create([
+                    'joinee_id'         =>  $id,
+                    'from'              =>  $date_from,
+                    'to'                =>  $date_to,
+                    'total_exp'         =>  $value['total_exp'],
+                    'designation'       =>  $value['designation'],
+                    'organisation'      =>  $value['organisation'],
+                    'location'          =>  $value['location'],
+                    'reason_to_leave'   =>  $value['reason_to_leave']
+                ]);
+            }
+        }
+    }
+
+    public function update_remuneration($request)
+    {
+        $id = $request->id;
+        JoineeRemuneration::where('joinee_id', $id)->delete();
+        JoineeRemuneration::Create([
+            'joinee_id'         =>  $id,
+            'take_home_sal'     =>  $request->salary,
+            'deductions'        =>  $request->deductions,
+            'monthly_ctc'       =>  $request->monthly_ctc,
+            'yearly_ctc'        =>  $request->yearly_ctc,
+            'others'            =>  $request->others
+        ]);
+    }
+
+    public function update_job_details($request)
+    {
+        $id = $request->id;
+        JoineeJobDetails::where('joinee_id', $id)->delete();
+        JoineeJobDetails::Create([
+            'joinee_id'         => $id,
+            'responsibilities'    => $request->responsibilities,
+            'achievements'        => $request->achievements,
+            'ambition'            => $request->ambition,
+            'passport'            => $request->passport
+        ]);
+    }
+
+    public function update_activity($request)
+    {
         $id = $request->id;
         $activities = $request->activities;
-        if($activities != ''){
-            Activity::where('joinee_id',$id)->delete();
-            foreach($activities as $key => $value){
+        if ($activities != '') {
+            Activity::where('joinee_id', $id)->delete();
+            foreach ($activities as $key => $value) {
                 Activity::Create([
                     'joinee_id' =>  $id,
                     'activity'  =>  $value['activity']
@@ -453,24 +489,27 @@ class FactSheetController extends Controller
         }
     }
 
-    public function update_visa($request){
+    public function update_visa($request)
+    {
         $id = $request->id;
-        JoineeVisa::where('joinee_id',$id)->delete();
+        JoineeVisa::where('joinee_id', $id)->delete();
         JoineeVisa::Create([
-        	'joinee_id'		=> $id,
-        	'visa_applied'	=> $request->visa_applied,
-        	'reject_reason' => $request->reason
+            'joinee_id'        => $id,
+            'visa_applied'    => $request->visa_applied,
+            'reject_reason' => $request->reason
         ]);
     }
 
+
     public function add(Request $request)
     {
-        $validator = Validator::make($request->all(),$this->validationRules);
-        if($validator->fails()){
-            return response()->json($validator->errors(),404);
+        $validator = Validator::make($request->all(), $this->validationRules);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 404);
         }
         DB::beginTransaction();
-        try{
+        try {
+
             $this->add_factsheet($request);
             $this->add_languages($request);
             $this->add_siblings($request);
@@ -483,11 +522,10 @@ class FactSheetController extends Controller
             $this->add_job_details($request);
             $this->add_activity($request);
             $this->add_visadetails($request);
-			DB::commit();
-        }
-        catch(\Exception $e){
+            DB::commit();
+        } catch (\Exception $e) {
             DB::rollback();
-            error_404(false,$e);
+            error_404(false, $e);
             die;
         }
 
@@ -519,15 +557,15 @@ class FactSheetController extends Controller
         $responseData['activities'] = $activities;
         $responseData['visa'] = $visa;
         $message = 'Data saved successfully';
-        success_200(true,$message,$responseData);
+        success_200(true, $message, $responseData);
     }
 
     public function show($id)
     {
         $fact_sheet = FactSheet::find($id);
-    	if(count($fact_sheet) === 0){
-            $err_msg = 'Data not found for the id '.$id;
-    		error_404(false,$err_msg);
+        if (empty($fact_sheet)) {
+            $err_msg = 'Data not found for the id ' . $id;
+            error_404(false, $err_msg);
             die;
         }
 
@@ -554,28 +592,28 @@ class FactSheetController extends Controller
         $responseData['others'] = $job;
         $responseData['activities'] = $activities;
         $responseData['visa'] = $visa;
-    	success_200(true,$responseData);
+        success_200(true, $responseData);
     }
 
     public function update(Request $request)
     {
-    	$id = $request->id;
+        $id = $request->id;
         $candidate_id = FactSheet::find($id);
-        if(count($candidate_id) === 0){
-            $msg = "Details cannot found for id ".$id;
-            error_404(false,$msg);
+        if (empty($candidate_id)) {
+            $msg = "Details cannot found for id " . $id;
+            error_404(false, $msg);
             die;
         }
-        $this->validationRules['candidate_email'] = 'required|email|unique:fact_sheet,email,'.$id.',id';
-        $this->validationRules['phone'] = 'numeric|digits_between:6,10|unique:fact_sheet,phonenumber,'.$id.',id';
-        $this->validationRules['candidate_mobile'] = 'required|numeric|digits_between:10,12|unique:fact_sheet,mobile,'.$id.',id';
+        $this->validationRules['candidate_email'] = 'required|email|unique:fact_sheet,email,' . $id . ',id';
+        $this->validationRules['phone'] = 'numeric|digits_between:6,10|unique:fact_sheet,phonenumber,' . $id . ',id';
+        $this->validationRules['candidate_mobile'] = 'required|numeric|digits_between:10,12|unique:fact_sheet,mobile,' . $id . ',id';
 
-    	$validator = Validator::make($request->all(),$this->validationRules);
-        if($validator->fails()){
-            return response()->json($validator->errors(),400);
+        $validator = Validator::make($request->all(), $this->validationRules);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
         }
         DB::beginTransaction();
-        try{
+        try {
             $this->update_factsheet($request);
             $this->update_languages($request);
             $this->update_education($request);
@@ -588,10 +626,9 @@ class FactSheetController extends Controller
             $this->update_job_details($request);
             $this->update_activity($request);
             $this->update_visa($request);
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollback();
-            error_404(false,$e);
+            error_404(false, $e);
             die;
         }
         DB::commit();
@@ -621,6 +658,6 @@ class FactSheetController extends Controller
         $responseData['visa'] = $visa;
 
         $message = 'Data updated successfully';
-        success_200(true,$message,$responseData);
+        success_200(true, $message, $responseData);
     }
 }
