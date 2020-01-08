@@ -41,7 +41,7 @@ Route::group(['middleware' => 'auth.jwt'], function () {
 	Route::post('candidates/{id}/id-card/update','IDCardController@update');
 	Route::delete('candidates/{id}/id-card/delete','IDCardController@delete');
 
-	Route::post('factsheet/add','FactSheetController@test');
+	Route::post('factsheet/add','FactSheetController@add');
 	Route::get('factsheet/show/{id}','FactSheetController@show');
 	Route::put('factsheet/update/{id}','FactSheetController@update');
 
