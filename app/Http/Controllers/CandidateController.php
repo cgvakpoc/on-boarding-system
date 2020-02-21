@@ -10,6 +10,7 @@ use Auth;
 use App\Candidate\Candidate;
 use App\Candidate\CandidateDocument;
 use App\Candidate\CandidateDoc;
+use App\Lead;
 
 class CandidateController extends Controller
 {
@@ -103,19 +104,31 @@ class CandidateController extends Controller
 
 	public function showCandidate($id)
 	{
-
-			$candidate = DB::table('candidates')
-						->where('candidates.id', $id)
-						->join('designations', 'candidates.designation_id' , '=', 'designations.id')
-						->join('departments', 'candidates.department_id','=','departments.id')
-						->orderBy('candidates.id','ASC')
-						->get(['candidates.*','designations.designation_name','departments.department']);
+		
+		$candidate = DB::table('candidates')
+					->where('candidates.id', $id)
+					->join('designations', 'candidates.designation_id' , '=', 'designations.id')
+					->join('departments', 'candidates.department_id','=','departments.id')
+					->orderBy('candidates.id','ASC')
+					->get(['candidates.*','designations.designation_name','departments.department']);
 
 						// echo "<pre>";
 						// print_r($candidate_list);
 						// die;
-
+		
 		// $candidate = Candidate::find($id);
+		$data = DB::table('cold_calling_status')
+					->select('id','date as status_date', 'name as status')
+					->where(['candidate_id' => $id])->get();
+		
+		if(isset($candidate[0])){
+			$candidate[0]->cold_calling_status = $data; // Add Cold Call status
+			$lead_name = Lead::select('name')->find($candidate[0]->lead_id)['name'];
+			$lead_name = ($lead_name != null) ? $lead_name : ''; 
+			$candidate[0]->lead_name = $lead_name;
+			$candidate[0]->is_tech_required = ($candidate[0]->is_tech_required == "1") ? true : false;
+		}
+
         if(!$candidate){
             $msg = 'Candidate with id '.$id.' cannot be found';
             error_404(false,$msg);
@@ -164,12 +177,12 @@ class CandidateController extends Controller
 		foreach($request->cold_call_status as $value){
 			$data = array(
 				"candidate_id" => $new_candidate->id, // get the last canditate id created to map
-				"date" => convert_date($value['date']),
-				"name" => $value['name'],
+				"date" => convert_date($value['status_date']),
+				"name" => $value['status'],
 				"created_at" => date('Y-m-d H:i:s'),
 				"updated_at" => date('Y-m-d H:i:s')
 			); // create an array of data and insert into the table
-			DB::table('cold_calling_status')->insert($data); // inseet the newly created array in table
+			DB::table('cold_calling_status')->insert($data); // insert the newly created array in table
 		}
 
 		$msg = 'Candidate details has been added successfully';
@@ -204,7 +217,6 @@ class CandidateController extends Controller
 			'date_of_birth'			=>	$dob,
 			'date_of_join'			=>	$doj,
 			'father_name'			=>	$request->father_name,
-			'cold_calling_status'	=>	$request->cold_call_status,
 			'commitment_status'		=>	$request->commitment_status,
 			'joining_bonus'			=>	$request->joining_bonus,
 			'recruiter_name'		=>	$request->recruiter_name,
@@ -214,6 +226,34 @@ class CandidateController extends Controller
 			'travel_accomodation'	=>	$request->accomodation,
 			'updated_by'			=>	$userid
 		]);
+
+		// Get the list of cold_call_status and update
+		foreach($request->cold_call_status as $value){
+			$data = array(
+				"date" => convert_date($value['status_date']),
+				"name" => $value['status'],
+				"updated_at" => date('Y-m-d H:i:s')
+			); // create an array of data and update into the table
+			DB::table('cold_calling_status')->where(['id' => $value])->update($data); // update the newly created array in table
+		}
+
+		$candidate = DB::table('candidates')
+					->where('candidates.id', $id)
+					->join('designations', 'candidates.designation_id' , '=', 'designations.id')
+					->join('departments', 'candidates.department_id','=','departments.id')
+					->orderBy('candidates.id','ASC')
+					->get(['candidates.*','designations.designation_name','departments.department']);
+		$data = DB::table('cold_calling_status')
+					->select('id','date as status_date', 'name as status')
+					->where(['candidate_id' => $id])->get();
+		if(isset($candidate[0])){
+			$candidate[0]->cold_calling_status = $data; // Add Cold Call status
+			$lead_name = Lead::select('name')->find($candidate[0]->lead_id)['name'];
+			$lead_name = ($lead_name != null) ? $lead_name : ''; 
+			$candidate[0]->lead_name = $lead_name;
+			$candidate[0]->is_tech_required = ($candidate[0]->is_tech_required == "1") ? true : false;
+			$candidate = $candidate[0];
+		}
 
 		if(!$update_candidate){
 			$msg = "Candidate cannot be updated";
@@ -325,12 +365,12 @@ class CandidateController extends Controller
 
 	public function add(Request $request)// Add Candidate Documents
 	{
-		$candidate_docs = CandidateDocument::where('candidate_id',$request->id)->first();
-		if(count((array)$candidate_docs) > 0){
-			$msg = "Data already exists";
-			bad_request(false,$msg);
-			die;
-		}
+		// $candidate_docs = CandidateDocument::where('candidate_id',$request->id)->first();
+		// if(count((array)$candidate_docs) > 0){
+		// 	$msg = "Data already exists";
+		// 	bad_request(false,$msg);
+		// 	die;
+		// }
 		$id = $request->id;
 		$validator = Validator::make($request->all(),$this->documentRules,$this->customMessage);
 		if($validator->fails()){
