@@ -24,20 +24,23 @@ class CandidateController extends Controller
 	}
 
 	protected $validationRules = [
-		'name'					=>	'required|string|min:3|max:255',
+		'name'				=>      'required|string|min:3|max:255',
 		'department_id'			=>	'required',
 		'designation_id'		=>	'required',
 		'doj'					=>	'required',
 		'dob'					=>	'required',
 		'father_name'			=>	'required|string|max:255',
 		'email_id'				=>	'required|string|email|unique:candidates,email',
-		'cold_call_status'		=>	'required|string',
+		'cold_call_status'		=>	'required|array',
 		'commitment_status'		=>	'required|string',
 		'recruiter_name'		=>	'required|string|max:255',
 		'requirement_detail'	=>	'required|string|max:255',
 		'source_of_hire'		=>	'required|string|max:255',
 		'location'				=>	'required|string|max:255',
-		'accomodation'			=>	'required|string|max:255'
+		'accomodation'			=>	'required|string|max:255',
+		'lead_id'			    =>	'required|numeric',
+		'contact_number'		=>  'required|string',
+		'is_tech_required'		=>  'required|boolean'
 	];
 
 	protected $documentRules = [
@@ -58,7 +61,24 @@ class CandidateController extends Controller
 		$search = $request->search;
 		$limit = $request->limit;
 
-		$candidate_list = Candidate::query();
+		 // $candidate_list = Candidate::get();
+		 
+		 // echo "<pre>";
+		 // print_r($candidate_list);
+		 // die;
+
+		$candidate_list = DB::table('candidates')
+						->join('designations', 'candidates.designation_id' , '=', 'designations.id')
+						->join('departments', 'candidates.department_id','=','departments.id')
+						->orderBy('candidates.id','ASC')
+						->get(['candidates.*','designations.designation_name','departments.department']);
+
+
+		//$candidate_list = Candidate::
+
+		 // echo "<pre>";
+		 // print_r($candidate_list);
+		 // die;
 
 		if($search){
 			$candidate_list = $candidate_list->where('name','LIKE','%'.$search.'%')
@@ -75,14 +95,27 @@ class CandidateController extends Controller
 		if($sort && $order){
 			$list = $candidate_list->orderBy($sort,$order)->paginate($limit); 
 		} else {
-			$list = $candidate_list->orderBy('id','ASC')->paginate($limit);    
+			$list = $candidate_list;    
 		}
+		
 		success_200(true,$list);
 	}
 
 	public function showCandidate($id)
 	{
-		$candidate = Candidate::find($id);
+
+			$candidate = DB::table('candidates')
+						->where('candidates.id', $id)
+						->join('designations', 'candidates.designation_id' , '=', 'designations.id')
+						->join('departments', 'candidates.department_id','=','departments.id')
+						->orderBy('candidates.id','ASC')
+						->get(['candidates.*','designations.designation_name','departments.department']);
+
+						// echo "<pre>";
+						// print_r($candidate_list);
+						// die;
+
+		// $candidate = Candidate::find($id);
         if(!$candidate){
             $msg = 'Candidate with id '.$id.' cannot be found';
             error_404(false,$msg);
@@ -93,6 +126,7 @@ class CandidateController extends Controller
 
 	public function addCandidate(Request $request)
 	{
+
 		$userid = Auth::user()->id;
 		$validator = Validator::make($request->all(),$this->validationRules);
 
@@ -111,7 +145,7 @@ class CandidateController extends Controller
 		$new_candidate->date_of_join 	= $doj;
 		$new_candidate->father_name 	= $request->father_name;
 		$new_candidate->email 			= $request->email_id;
-		$new_candidate->cold_calling_status = $request->cold_call_status;
+		$new_candidate->cold_calling_status = '';
 		$new_candidate->commitment_status = $request->commitment_status;
 		$new_candidate->joining_bonus = $request->joining_bonus;
 		$new_candidate->recruiter_name = $request->recruiter_name;
@@ -121,8 +155,22 @@ class CandidateController extends Controller
 		$new_candidate->travel_accomodation = $request->accomodation;
 		$new_candidate->created_by = $userid;
 		$new_candidate->updated_by = $userid;
-
+		$new_candidate->lead_id = $request->lead_id;
+		$new_candidate->contact_number = $request->contact_number;
+		$new_candidate->is_tech_required = $request->is_tech_required;
 		$candidate_saved = $new_candidate->save();
+
+		// Get the list of cold_call_status and insert
+		foreach($request->cold_call_status as $value){
+			$data = array(
+				"candidate_id" => $new_candidate->id, // get the last canditate id created to map
+				"date" => convert_date($value['date']),
+				"name" => $value['name'],
+				"created_at" => date('Y-m-d H:i:s'),
+				"updated_at" => date('Y-m-d H:i:s')
+			); // create an array of data and insert into the table
+			DB::table('cold_calling_status')->insert($data); // inseet the newly created array in table
+		}
 
 		$msg = 'Candidate details has been added successfully';
 		success_200(true,$new_candidate,$msg);
@@ -200,10 +248,16 @@ class CandidateController extends Controller
 
 	public function add_document($request){
 		$id = $request->id;
+		// echo $id;
+		// die;
 		$doc_upload = $request->file('document_upload');
 		$doc_path = public_path('/uploads');
+		error_reporting(1);
 		$doc_upload = store_files($doc_path,$doc_upload);
+		// echo "$doc_upload";
+		// die;
 		$doc_save = $doc_upload;
+
 		foreach($doc_save as $key){
 			CandidateDoc::Create([
 				'candidate_id'	=> $id,
