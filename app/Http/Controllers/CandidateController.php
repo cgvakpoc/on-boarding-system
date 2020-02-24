@@ -10,6 +10,7 @@ use Auth;
 use App\Candidate\Candidate;
 use App\Candidate\CandidateDocument;
 use App\Candidate\CandidateDoc;
+use App\Candidate\CandidateResume;
 use App\Lead;
 
 class CandidateController extends Controller
@@ -39,6 +40,7 @@ class CandidateController extends Controller
 		'source_of_hire'			=>	'required|string|max:255',
 		'location'					=>	'required|string|max:255',
 		'accomodation'				=>	'required|string|max:255',
+		'requirement_type'			=>	'required|numeric',
 		'requirement_lead_id'		=>	'required|numeric',
 		'consultant_lead_id'		=>	'required|numeric',
 		'technical_lead_id'			=>	'required|numeric',
@@ -152,6 +154,7 @@ class CandidateController extends Controller
 	public function addCandidate(Request $request)
 	{
 
+		// dd($request->all());
 		$userid = Auth::user()->id;
 		$validator = Validator::make($request->all(),$this->validationRules);
 
@@ -187,6 +190,7 @@ class CandidateController extends Controller
 		$new_candidate->assigned_consultant_work = $request->assigned_consultant_work;
 		$new_candidate->contact_number = $request->contact_number;
 		$new_candidate->is_tech_required = $request->is_tech_required;
+		$new_candidate->requirement_type = $request->requirement_type;
 		$candidate_saved = $new_candidate->save();
 
 		// Get the list of cold_call_status and insert
@@ -200,6 +204,21 @@ class CandidateController extends Controller
 			); // create an array of data and insert into the table
 			DB::table('cold_calling_status')->insert($data); // insert the newly created array in table
 		}
+
+		// Upload resume
+		$doc_upload = $request->file('resume');
+		if(!empty($doc_upload)){
+			$doc_path = public_path('/uploads');
+			error_reporting(1);
+			$doc_upload = store_files($doc_path,$doc_upload);
+	
+			foreach($doc_upload as $key){
+				CandidateResume::Create([
+					'candidate_id'	=> $new_candidate->id,
+					'resume_path'	=>	$key
+				]);
+			}
+		}		
 
 		$msg = 'Candidate details has been added successfully';
 		success_200(true,$new_candidate,$msg);
@@ -239,6 +258,7 @@ class CandidateController extends Controller
 			'requirement_details'		=>	$request->requirement_detail,
 			'source_of_hiring'			=>	$request->source_of_hire,
 			'location'					=>	$request->location,
+			'requirement_type' 			=>  $request->requirement_type,
 			'requirement_lead_id' 		=>  $request->requirement_lead_id,
 			'consultant_lead_id' 		=>  $request->consultant_lead_id,
 			'technical_lead_id' 		=>  $request->technical_lead_id,
@@ -311,9 +331,6 @@ class CandidateController extends Controller
         $msg = 'Candidate has been deleted';
         success_200(true,'',$msg);
 	}
-
-
-	//Upload Candidate Docs
 
 	public function add_document($request){
 		$id = $request->id;
