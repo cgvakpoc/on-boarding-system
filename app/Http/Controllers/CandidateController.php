@@ -25,23 +25,27 @@ class CandidateController extends Controller
 	}
 
 	protected $validationRules = [
-		'name'				=>      'required|string|min:3|max:255',
-		'department_id'			=>	'required',
-		'designation_id'		=>	'required',
-		'doj'					=>	'required',
-		'dob'					=>	'required',
-		'father_name'			=>	'required|string|max:255',
-		'email_id'				=>	'required|string|email|unique:candidates,email',
-		'cold_call_status'		=>	'required|array',
-		'commitment_status'		=>	'required|string',
-		'recruiter_name'		=>	'required|string|max:255',
-		'requirement_detail'	=>	'required|string|max:255',
-		'source_of_hire'		=>	'required|string|max:255',
-		'location'				=>	'required|string|max:255',
-		'accomodation'			=>	'required|string|max:255',
-		'lead_id'			    =>	'required|numeric',
-		'contact_number'		=>  'required|string',
-		'is_tech_required'		=>  'required|boolean'
+		'name'					=>      'required|string|min:3|max:255',
+		'department_id'				=>	'required',
+		'designation_id'			=>	'required',
+		'doj'						=>	'required',
+		'dob'						=>	'required',
+		'father_name'				=>	'required|string|max:255',
+		'email_id'					=>	'required|string|email|unique:candidates,email',
+		'cold_call_status'			=>	'required|array',
+		'commitment_status'			=>	'required|string',
+		'recruiter_name'			=>	'required|string|max:255',
+		'requirement_detail'		=>	'required|string|max:255',
+		'source_of_hire'			=>	'required|string|max:255',
+		'location'					=>	'required|string|max:255',
+		'accomodation'				=>	'required|string|max:255',
+		'requirement_lead_id'		=>	'required|numeric',
+		'consultant_lead_id'		=>	'required|numeric',
+		'technical_lead_id'			=>	'required|numeric',
+		'candidate_accomodation'	=>  'required|boolean',	
+		'assigned_consultant_work'	=>  'required|boolean',
+		'contact_number'			=>  'required|string',
+		'is_tech_required'			=>  'required|boolean'
 	];
 
 	protected $documentRules = [
@@ -123,10 +127,18 @@ class CandidateController extends Controller
 		
 		if(isset($candidate[0])){
 			$candidate[0]->cold_calling_status = $data; // Add Cold Call status
-			$lead_name = Lead::select('name')->find($candidate[0]->lead_id)['name'];
-			$lead_name = ($lead_name != null) ? $lead_name : ''; 
+			$lead_name = Lead::select('name')->find($candidate[0]->requirement_lead_id)['name'];
+			$lead_name = ($lead_name != null) ? $lead_name : '';
 			$candidate[0]->lead_name = $lead_name;
 			$candidate[0]->is_tech_required = ($candidate[0]->is_tech_required == "1") ? true : false;
+			$candidate[0]->candidate_accomodation = ($candidate[0]->candidate_accomodation == "1") ? true: false;
+			$candidate[0]->assigned_consultant_work = ($candidate[0]->assigned_consultant_work == "1") ? true: false;
+			$lead_name = Lead::select('name')->find($candidate[0]->consultant_lead_id)['name'];
+			$lead_name = ($lead_name != null) ? $lead_name : '';
+			$candidate[0]->consultant_lead_name = $lead_name;
+			$lead_name = Lead::select('name')->find($candidate[0]->technical_lead_id)['name'];
+			$lead_name = ($lead_name != null) ? $lead_name : '';
+			$candidate[0]->technical_lead_name = $lead_name;
 		}
 
         if(!$candidate){
@@ -168,7 +180,11 @@ class CandidateController extends Controller
 		$new_candidate->travel_accomodation = $request->accomodation;
 		$new_candidate->created_by = $userid;
 		$new_candidate->updated_by = $userid;
-		$new_candidate->lead_id = $request->lead_id;
+		$new_candidate->requirement_lead_id = $request->requirement_lead_id;
+		$new_candidate->consultant_lead_id = $request->consultant_lead_id;
+		$new_candidate->technical_lead_id = $request->technical_lead_id;
+		$new_candidate->candidate_accomodation = $request->candidate_accomodation;
+		$new_candidate->assigned_consultant_work = $request->assigned_consultant_work;
 		$new_candidate->contact_number = $request->contact_number;
 		$new_candidate->is_tech_required = $request->is_tech_required;
 		$candidate_saved = $new_candidate->save();
@@ -211,20 +227,25 @@ class CandidateController extends Controller
       	$dob = convert_date($request->dob);
 
 		$update_candidate = $candidate->update([
-			'name'					=>	$request->name,
-			'department_id'			=>	$request->department_id,
-			'designation_id'		=>	$request->designation_id,
-			'date_of_birth'			=>	$dob,
-			'date_of_join'			=>	$doj,
-			'father_name'			=>	$request->father_name,
-			'commitment_status'		=>	$request->commitment_status,
-			'joining_bonus'			=>	$request->joining_bonus,
-			'recruiter_name'		=>	$request->recruiter_name,
-			'requirement_details'	=>	$request->requirement_detail,
-			'source_of_hiring'		=>	$request->source_of_hire,
-			'location'				=>	$request->location,
-			'travel_accomodation'	=>	$request->accomodation,
-			'updated_by'			=>	$userid
+			'name'						=>	$request->name,
+			'department_id'				=>	$request->department_id,
+			'designation_id'			=>	$request->designation_id,
+			'date_of_birth'				=>	$dob,
+			'date_of_join'				=>	$doj,
+			'father_name'				=>	$request->father_name,
+			'commitment_status'			=>	$request->commitment_status,
+			'joining_bonus'				=>	$request->joining_bonus,
+			'recruiter_name'			=>	$request->recruiter_name,
+			'requirement_details'		=>	$request->requirement_detail,
+			'source_of_hiring'			=>	$request->source_of_hire,
+			'location'					=>	$request->location,
+			'requirement_lead_id' 		=>  $request->requirement_lead_id,
+			'consultant_lead_id' 		=>  $request->consultant_lead_id,
+			'technical_lead_id' 		=>  $request->technical_lead_id,
+			'candidate_accomodation'	=>  $request->candidate_accomodation,
+			'assigned_consultant_work' 	=>  $request->assigned_consultant_work,
+			'travel_accomodation'		=>	$request->accomodation,
+			'updated_by'				=>	$userid
 		]);
 
 		// Get the list of cold_call_status and update
@@ -248,10 +269,18 @@ class CandidateController extends Controller
 					->where(['candidate_id' => $id])->get();
 		if(isset($candidate[0])){
 			$candidate[0]->cold_calling_status = $data; // Add Cold Call status
-			$lead_name = Lead::select('name')->find($candidate[0]->lead_id)['name'];
+			$lead_name = Lead::select('name')->find($candidate[0]->requirement_lead_id)['name'];
 			$lead_name = ($lead_name != null) ? $lead_name : ''; 
 			$candidate[0]->lead_name = $lead_name;
 			$candidate[0]->is_tech_required = ($candidate[0]->is_tech_required == "1") ? true : false;
+			$candidate[0]->candidate_accomodation = ($candidate[0]->candidate_accomodation == "1") ? true: false;
+			$candidate[0]->assigned_consultant_work = ($candidate[0]->assigned_consultant_work == "1") ? true: false;
+			$lead_name = Lead::select('name')->find($candidate[0]->consultant_lead_id)['name'];
+			$lead_name = ($lead_name != null) ? $lead_name : '';
+			$candidate[0]->consultant_lead_name = $lead_name;
+			$lead_name = Lead::select('name')->find($candidate[0]->technical_lead_id)['name'];
+			$lead_name = ($lead_name != null) ? $lead_name : '';
+			$candidate[0]->technical_lead_name = $lead_name;
 			$candidate = $candidate[0];
 		}
 
