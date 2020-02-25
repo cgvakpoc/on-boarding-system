@@ -18,8 +18,7 @@ Route::post('register', 'ApiController@register');
 
 Route::group(['middleware' => 'auth.jwt'], function () {
 	Route::post('logout', 'ApiController@logout');
-	Route::post('user', 'ApiController@getAuthUser');
-	Route::post('user1', 'ApiController@getAuthenticatedUser');
+	Route::get('user', 'ApiController@getAuthUser');
 
 	Route::get('get-user-roles/{id}', 'ApiController@getUserRoles');
 	Route::get('roles-permissions/{id}', 'ApiController@getRolePermission');
@@ -40,15 +39,19 @@ Route::group(['middleware' => 'auth.jwt'], function () {
 	Route::post('candidates/{id}/id-card/add','IDCardController@add');
 	Route::post('candidates/{id}/id-card/update','IDCardController@update');
 	Route::delete('candidates/{id}/id-card/delete','IDCardController@delete');
+	// Route::get('candidates/{id}/show-d','CandidateController@showCandidate');
 
 	Route::post('factsheet/add','FactSheetController@add');
 	Route::get('factsheet/show/{id}','FactSheetController@show');
 	Route::put('factsheet/update/{id}','FactSheetController@update');
+	Route::get('factsheet/getState','FactSheetController@getState');
+	Route::get('factsheet/getTown','FactSheetController@getTown');
 
 	Route::apiResource('departments', 'DepartmentController');
 	Route::apiResource('roles', 'Role\RoleController');
-	Route::apiResource('permission/{roleId}', 'Role\PermissionController');
+	Route::apiResource('permission', 'Role\PermissionController');
 	Route::apiResource('leads','LeadController');
+	Route::apiResource('requirement','RequirementController');
 });
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
