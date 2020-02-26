@@ -8,6 +8,7 @@ use JWTAuth;
 use Validator;
 use Auth;
 use App\Candidate\Candidate;
+use App\Candidate\ColdCallingStatus;
 use App\Candidate\CandidateDocument;
 use App\Candidate\CandidateDoc;
 use App\Candidate\CandidateResume;
@@ -270,12 +271,22 @@ class CandidateController extends Controller
 
 		// Get the list of cold_call_status and update
 		foreach($request->cold_call_status as $value){
+			if(!isset($value['id']) && empty($value['id']))
+			{
+				$value['id'] = 0;
+			}
 			$data = array(
 				"date" => convert_date($value['status_date']),
 				"name" => $value['status'],
 				"updated_at" => date('Y-m-d H:i:s')
 			); // create an array of data and update into the table
-			DB::table('cold_calling_status')->where(['id' => $value])->update($data); // update the newly created array in table
+			
+			ColdCallingStatus::updateOrCreate(
+        ['id' => intval($value['id']), 'candidate_id' => $id],
+        $data
+      );
+
+			// DB::table('cold_calling_status')->where([['id', '=', $value['id']], ['candidate_id', '=', $id]])->update($data); // update the newly created array in table
 		}
 
 		$candidate = DB::table('candidates')
