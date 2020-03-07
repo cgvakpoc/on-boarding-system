@@ -41,6 +41,9 @@ Route::group(['middleware' => 'auth.jwt'], function () {
 	Route::delete('candidates/{id}/id-card/delete','IDCardController@delete');
 	// Route::get('candidates/{id}/show-d','CandidateController@showCandidate');
 
+	/* ===================== Joinee ======================= */
+	Route::post('joinee/add','JoineeController@addJoinee');
+
 	Route::post('factsheet/add','FactSheetController@add');
 	Route::get('factsheet/show/{id}','FactSheetController@show');
 	Route::put('factsheet/update/{id}','FactSheetController@update');
