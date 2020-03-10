@@ -13,6 +13,8 @@ use App\Candidate\CandidateDocument;
 use App\Candidate\CandidateDoc;
 use App\Candidate\CandidateResume;
 use App\Lead;
+use App\Document;
+use Illuminate\Support\Facades\File;
 
 class CandidateController extends Controller
 {
@@ -52,6 +54,7 @@ class CandidateController extends Controller
 	];
 
 	protected $documentRules = [
+		'document_type'			=>	'required',
 		'document_title'		=>	'required',
 		'document_upload'		=>	'required',
 		'document_upload.*'		=>	'mimes:pdf,docx,doc'
@@ -397,38 +400,24 @@ class CandidateController extends Controller
 
 	public function index(Request $request,$msg='')
 	{	
-		$id = $request->id;
-		$doc_list = Candidate::find($id);
+		$candidate_id = Auth::user()->id;
+		$doc_list = Candidate::find($candidate_id);
 		if(count((array)$doc_list) === 0){
 			$error_msg = 'Sorry, Documents for id '.$id.' cannot be found';
 			error_404(false,$error_msg);
 			die;
 		}
-		$documents = DB::table('candidate_documents as c1')
-		               ->select('c1.document_title')
-		               ->join('candidates as c2','c1.candidate_id','c2.id')
-		               ->where('c1.candidate_id',$id)
-		               ->get();
-		$document_list = DB::table('candidate_document_details as c1')
-		              ->select('c1.document_path')
-		              ->join('candidates as c2','c2.id','c1.candidate_id')
-		              ->where('c1.candidate_id',$id)
-		              ->get();
+		
 		$list = array();
-		$list['title'] = $documents;
-		$list['document_paths'] = $document_list;
+		$list['joinee_documents'] = CandidateDocument::with('document_details','document_title')->where(['document_type' => 1])->get()->toArray();
+		$list['technical_documents'] = CandidateDocument::with('document_details','document_title')->where(['document_type' => 2])->get()->toArray();
+
 		success_200(true,$list,$msg);
 	}
 
 	public function add(Request $request)// Add Candidate Documents
 	{
-		// $candidate_docs = CandidateDocument::where('candidate_id',$request->id)->first();
-		// if(count((array)$candidate_docs) > 0){
-		// 	$msg = "Data already exists";
-		// 	bad_request(false,$msg);
-		// 	die;
-		// }
-		$id = $request->id;
+		$candidate_id = Auth::user()->id;
 		$validator = Validator::make($request->all(),$this->documentRules,$this->customMessage);
 		if($validator->fails()){
 			return response()->json($validator->errors());
@@ -436,8 +425,35 @@ class CandidateController extends Controller
 		
 		DB::beginTransaction();
 		try{
-			$this->add_title($request);
-			$this->add_document($request);
+			$document_id = $request->document_title;
+			$document_type = $request->document_type;
+			$documents = $request->file('document_upload');
+			foreach($documents as $key=> $document){
+				$fields = [
+						'candidate_id'		=> $candidate_id,
+						'document_type'	=>	$document_type[$key],
+						'document_id'	=>	$document_id[$key]
+					];
+				$candidate_document_id = CandidateDocument::where($fields)->first();
+				if(empty($candidate_document_id)){
+					$candidate_document = new CandidateDocument;
+					$candidate_document->fill($fields)->save();
+					$candidate_document_id = $candidate_document->id;
+				}else{
+					$candidate_document_id = $candidate_document_id->id;
+				}
+				
+				$doc_path = public_path('/uploads');
+				$file_path = store_files($doc_path,$document);
+				$file_name = explode('/', $file_path[0]);
+		
+				CandidateDoc::Create([
+					'candidate_document_id'	=> $candidate_document_id,
+					'file_name'	=>	array_pop($file_name),
+					'path' => $file_path[0]
+				]);
+			}
+		
 		}
 		catch(\Exception $e){
 			DB::rollback();
@@ -449,31 +465,32 @@ class CandidateController extends Controller
 		$docs = $this->index($request,$msg);
 	}
 
-	public function update(Request $request)//Update Candidate Documents
+	public function delete(Request $request)//delete Candidate Documents
 	{
-		$id = $request->id;
-		$candidate_docs = CandidateDocument::where('candidate_id',$id)->first();
-		if(count((array)$candidate_docs) === 0){
-			$msg = 'Sorry, Documents for id '.$id.' cannot be found';
-			error_404(false,$msg);
-			die;
-		}
-		$validator = Validator::make($request->all(),$this->documentRules,$this->customMessage);
+		$validator = Validator::make($request->all(),['document_id'=> 'required']);
 		if($validator->fails()){
 			return response()->json($validator->errors());
 		}
 
 		DB::beginTransaction();
 		try{
-			$this->update_title($request);
-			$this->update_document($request);
+			$file = CandidateDoc::where(['id'=>$request->document_id])->first();
+			$path = ltrim($file->path, '/'); 
+			File::delete($path);
+			$file->delete();
 		}
 		catch(\Exception $e){
 			DB::rollback();
 			error_404(false,$e);
 		}
 		DB::commit();
-		$msg = 'Documents has been updated successfully';
+		$msg = 'Documents has been deleted successfully';
 		$this->index($request,$msg);
+	}
+	
+	public function listDocuments(){
+		$documentList = Document::get();
+		$response = http_200(true, 'Success', $documentList);
+		return $response;
 	}
 }

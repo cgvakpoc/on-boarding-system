@@ -24,13 +24,14 @@ Route::group(['middleware' => 'auth.jwt'], function () {
 	Route::get('roles-permissions/{id}', 'ApiController@getRolePermission');
 	Route::get('get-permissions', 'ApiController@getPermissions');
 
+	Route::get('document_titles','CandidateController@listDocuments');
 	Route::get('candidates','CandidateController@listCandidates');
 	Route::get('candidates/{id}','CandidateController@showCandidate');
 	Route::post('candidates/add','CandidateController@addCandidate');
 	Route::put('candidates/{id}/update','CandidateController@updateCandidate');
 	Route::delete('candidates/{id}','CandidateController@deleteCandidate');
 	Route::post('candidates/{id}/professional-documents/add','CandidateController@add');
-	Route::post('candidates/{id}/professional-documents/update','CandidateController@update');
+	Route::post('candidates/{id}/professional-documents/delete','CandidateController@delete');
 	Route::get('candidates/{id}/professional-documents','CandidateController@index');
 	Route::post('candidates/{id}/assessment/add','TaskController@add');
 	Route::post('candidates/{id}/assessment/update','TaskController@update');

@@ -7,8 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class CandidateDocument extends Model
 {
 	protected $table = 'candidate_documents';
-    protected $primaryKey = null;
-    public $incrementing = false;
+    protected $primaryKey = 'id';
     public $timestamps = false;
-    protected $fillable = ['candidate_id','document_title'];
+    protected $fillable = ['candidate_id','document_type','document_id'];
+	
+	public function document_details() {
+		return $this->hasMany('App\Candidate\CandidateDoc','candidate_document_id');
+	}
+	
+	public function document_title() {
+		return $this->belongsTo('App\Document','document_id');
+	}
+
+	
 }

@@ -12,6 +12,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use Validator;
 use App\UserRole;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ApiController extends Controller
 {
@@ -98,7 +99,8 @@ class ApiController extends Controller
 			$response = error_401('Invalid Email or Password');
 			return $response;
 		}
-		$response = response()->json(['success' => true, 'token' => $jwt_token]);
+		Auth::user()->roles;
+		$response = response()->json(['success' => true, 'token' => $jwt_token, 'user' => Auth::user()]);
 		return $response;
 	}
 
