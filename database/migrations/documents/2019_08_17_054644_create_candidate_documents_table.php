@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateCandidateDocumentDetails extends Migration
+class CreateCandidateDocumentsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,11 @@ class CreateCandidateDocumentDetails extends Migration
      */
     public function up()
     {
-        Schema::create('candidate_document_details',function(Blueprint $table){
-            $table->integer('candidate_id')->unsigned();
-            $table->text('document_path');
+        Schema::create('candidate_documents',function(Blueprint $table){
+            $table->increments('id');
+            $table->integer('candidate_id');
+			$table->enum('document_type', [1, 2])->comment('1 => Joinee Documents, 2=> Technical Document');
+            $table->integer('document_id');
             $table->foreign('candidate_id')
                   ->references('id')
                   ->on('candidates')
@@ -30,6 +32,6 @@ class CreateCandidateDocumentDetails extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('document_details');
+        Schema::DropIfExists('candidate_documents');
     }
 }
