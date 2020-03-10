@@ -52,6 +52,9 @@ Route::group(['middleware' => 'auth.jwt'], function () {
 	Route::apiResource('permission', 'Role\PermissionController');
 	Route::apiResource('leads','LeadController');
 	Route::apiResource('requirement','RequirementController');
+
+	Route::post('createuser','UserController@checkAndCreateUser');
+	Route::get('createroles','UserController@createUserRoles');
 });
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
