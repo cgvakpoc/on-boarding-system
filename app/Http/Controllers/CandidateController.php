@@ -398,9 +398,8 @@ class CandidateController extends Controller
 		}
 	}
 
-	public function index(Request $request,$msg='')
+	public function index($candidate_id, Request $request, $msg='')
 	{	
-		$candidate_id = Auth::user()->id;
 		$doc_list = Candidate::find($candidate_id);
 		if(count((array)$doc_list) === 0){
 			$error_msg = 'Sorry, Documents for id '.$id.' cannot be found';
@@ -409,15 +408,14 @@ class CandidateController extends Controller
 		}
 		
 		$list = array();
-		$list['joinee_documents'] = CandidateDocument::with('document_details','document_title')->where(['document_type' => 1])->get()->toArray();
-		$list['technical_documents'] = CandidateDocument::with('document_details','document_title')->where(['document_type' => 2])->get()->toArray();
+		$list['joinee_documents'] = CandidateDocument::with('document_details','document_title')->where(['document_type' => 1,'candidate_id' => $candidate_id])->get()->toArray();
+		$list['technical_documents'] = CandidateDocument::with('document_details','document_title')->where(['document_type' => 2,'candidate_id' => $candidate_id])->get()->toArray();
 
 		success_200(true,$list,$msg);
 	}
 
-	public function add(Request $request)// Add Candidate Documents
+	public function add($candidate_id, Request $request)// Add Candidate Documents
 	{
-		$candidate_id = Auth::user()->id;
 		$validator = Validator::make($request->all(),$this->documentRules,$this->customMessage);
 		if($validator->fails()){
 			return response()->json($validator->errors());
@@ -462,10 +460,10 @@ class CandidateController extends Controller
 		}
 		DB::commit();
 		$msg = 'Documents uploaded successfully';
-		$docs = $this->index($request,$msg);
+		$docs = $this->index($candidate_id,$request,$msg);
 	}
 
-	public function delete(Request $request)//delete Candidate Documents
+	public function delete($candidate_id, Request $request)//delete Candidate Documents
 	{
 		$validator = Validator::make($request->all(),['document_id'=> 'required']);
 		if($validator->fails()){
@@ -485,7 +483,7 @@ class CandidateController extends Controller
 		}
 		DB::commit();
 		$msg = 'Documents has been deleted successfully';
-		$this->index($request,$msg);
+		$this->index($candidate_id, $request, $msg);
 	}
 	
 	public function listDocuments(){
