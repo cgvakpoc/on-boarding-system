@@ -9,6 +9,9 @@ use App\Mail\BirthdayWishes;
 use App\Mail\DefaultTemplate;
 use App\Mail\EmailError;
 use App\EmailQueues;
+use App\Mail\NewJoineeDetails;
+use App\Mail\PrivacyPolicy;
+use App\Mail\WelcomeJoinee;
 
 class SendEmail extends Controller
 {
@@ -31,6 +34,15 @@ class SendEmail extends Controller
                     switch ($template) {
                         case 'birthday_wishes':
                             Mail::send(new BirthdayWishes($details));
+                            break;
+                        case 'welcome_joinee':
+                            Mail::send(new WelcomeJoinee($details));
+                            break;
+                        case 'privacy_policy':
+                            Mail::send(new PrivacyPolicy($details));
+                            break;
+                        case 'new_joinee_details':
+                            Mail::send(new NewJoineeDetails($details));
                             break;
                         case 'default':
                             Mail::send(new DefaultTemplate($details));
@@ -105,9 +117,9 @@ class SendEmail extends Controller
 
     public function generateView()
     {
-        echo url(config('constants.IMAGE_UPLOAD_PATH')).'<br>';
-        echo base_path('uploads').'<br>';
-        echo asset(config('constants.IMAGE_UPLOAD_PATH').'/123').'<br>';
+        echo url(config('constants.IMAGE_UPLOAD_PATH')) . '<br>';
+        echo base_path('uploads') . '<br>';
+        echo asset(config('constants.IMAGE_UPLOAD_PATH') . '/123') . '<br>';
         die;
         echo config('constants.IMAGE_UPLOAD_PATH');
         die;
@@ -230,6 +242,84 @@ class SendEmail extends Controller
             'message' => '',
             'template' => '123',
             'template_details' => '',
+            'attachments' => '',
+            'error_message' => '',
+            'priority' => 1,
+        );
+        EmailQueues::create($details);
+    }
+
+    public function welcomeJoinee()
+    {
+        $data['content'] = array(
+            'name' => 'Kathiresan',
+            'doj' => '03rd June 2019',
+            'designation' => 'Software Developer',
+            'employee_image' => 'avatar.jpg',
+        );
+        return View('mail.welcome_joinee', $data);
+    }
+
+    public function privacyPolicy()
+    {
+        return View('mail.privacy_policy');
+    }
+
+    public function newJoineeDetails()
+    {
+        $data['content'] = array(
+            'name' => 'Kathiresan',
+            'father_name' => 'Mani',
+            'doj' => '03-June-2019',
+            'designation' => 'Software Developer',
+            'department' => 'Technical'
+        );
+        return View('mail.new_joinee_details', $data);
+    }
+
+    public function insertTemplateMails()
+    {
+
+        $details = array(
+            'from' => 'on-boarding-test@gmail.com',
+            'to' => 'testmail5210@gmail.com',
+            'cc' => '',
+            'bcc' => '',
+            'subject' => 'Template - Welcome Joinee',
+            'message' => '',
+            'template' => 'welcome_joinee',
+            'template_details' => '{"name":"Test User","doj":"03rd June 2019","designation":"Sr.Software Developer","employee_image":"avatar.jpg"}',
+            'attachments' => '',
+            'error_message' => '',
+            'priority' => 1,
+        );
+        EmailQueues::create($details);
+
+        $details = array(
+            'from' => 'on-boarding-test@gmail.com',
+            'to' => 'testmail5210@gmail.com',
+            'cc' => '',
+            'bcc' => '',
+            'subject' => 'Template - Privacy Policy',
+            'message' => '',
+            'template' => 'privacy_policy',
+            'template_details' => '{}',
+            'attachments' => '',
+            'error_message' => '',
+            'priority' => 1,
+        );
+        EmailQueues::create($details);
+
+
+        $details = array(
+            'from' => 'on-boarding-test@gmail.com',
+            'to' => 'testmail5210@gmail.com',
+            'cc' => '',
+            'bcc' => '',
+            'subject' => 'Template - New Joinee Details',
+            'message' => '',
+            'template' => 'new_joinee_details',
+            'template_details' => '{"name":"Test User","father_name":"Test User2","doj":"03-June-2019","designation":"Sr.Software Developer","department":"Technical"}',
             'attachments' => '',
             'error_message' => '',
             'priority' => 1,
